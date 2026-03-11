@@ -7,7 +7,7 @@
 
 ## 1. Product Summary
 
-**Trendy** is an AI-powered news fact-checking and verification platform targeting Arabic-speaking users — primarily Egypt. It allows users to browse, filter, and read news items that have been automatically assessed by an AI pipeline and assigned one of four verdicts: **TRUE**, **FALSE**, **MISLEADING**, or **UNVERIFIED**.
+**Trendy** is an AI-powered news fact-checking and verification platform targeting Arabic-speaking users — primarily Egypt. It allows users to browse, filter, and read news items that have been automatically assessed by an AI pipeline and assigned one of four verdicts: **VERIFIED** (TRUE in database), **FAKE** (FALSE in database), **MISLEADING**, or **UNVERIFIED**.
 
 Users can react to news stories, bookmark articles, receive notifications, and manage their personal profile. A **Demo Mode** lets visitors experience the feed without creating an account.
 
@@ -105,7 +105,7 @@ Users can react to news stories, bookmark articles, receive notifications, and m
 | **Left Sidebar** (desktop) | Category navigation (`UserSidebar`) — filters news by topic |
 | **Right Sidebar** (desktop) | Trending news panel (`TrendingSidebar`) — top 5 trending items |
 | **Main Column** | Paginated list of `NewsCard` components |
-| **Filter Tabs** | Verification status tabs: All / True / False / Misleading / Unverified |
+| **Filter Tabs** | Verification status tabs: All / Verified (متحقق) / Fake (مزيف) / Misleading (مضلل) / Unverified (غير متحقق) |
 | **Mobile Sidebar** | Drawer overlay (same category list, toggled by navbar burger) |
 
 **Each `NewsCard` shows:**
@@ -184,8 +184,11 @@ Single shared instance. Configuration:
 - `autoRefreshToken: true`
 - `persistSession: true`
 - `detectSessionInUrl: true` (handles email confirmation tokens)
+- `flowType: "pkce"` (PKCE flow for enhanced security)
+- `storageKey: "sb-trendy-auth-token"` (custom localStorage key)
+- `lock: (_name, _acquireTimeout, fn) => fn()` — **bypasses Navigator LockManager** to prevent deadlocks during `getSession()` and `signInWithPassword()` calls (especially on page refresh or in React StrictMode)
 
-**One client only** — creating multiple instances causes `NavigatorLockManager` timeout errors.
+**One client only** — creating multiple instances causes session contention. The lock bypass eliminates deadlocks that previously caused infinite loading states.
 
 ---
 
@@ -325,16 +328,28 @@ IntersectionObserver watches a sentinel <div> at the bottom of the list
 
 ### 9.4 Verdict Filtering (Server-side optimisation)
 ```
-verificationStatus = "TRUE" / "FALSE" / "MISLEADING"
-  └─ prefetchVerdicts() fetches only matching verdict IDs
+Frontend filter keys: VERIFIED, FAKE, MISLEADING, UNVERIFIED, ALL
+Database verdict values: TRUE/VERIFIED, FALSE/FAKE, MISLEADING
+
+VERDICT_ALIASES maps frontend keys to DB values:
+  VERIFIED → ["VERIFIED", "TRUE"]
+  FAKE → ["FAKE", "FALSE"]
+  MISLEADING → ["MISLEADING"]
+
+verificationStatus = VERIFIED / FAKE / MISLEADING
+  └─ prefetchVerdicts() queries verdicts table with .in("verdict", aliases)
   └─ fetchNewsItems() runs .in("id", matchingIds) → only matching articles returned
 
-verificationStatus = "UNVERIFIED"
-  └─ prefetchVerdicts() fetches all verdict IDs
-  └─ fetchNewsItems() runs .not("id", "in", verdictIds) → unverified only
+verificationStatus = UNVERIFIED
+  └─ prefetchVerdicts() fetches ALL verdict news_ids
+  └─ fetchNewsItems() runs .not("id", "in", verdictIds) → items WITHOUT verdicts
 
-verificationStatus = "ALL"
+verificationStatus = ALL
   └─ No pre-fetch → verdicts attached per page via attachVerdicts()
+
+IMPORTANT: Filtering on news_items.verification_status column directly does NOT
+work because verified items keep the default UNVERIFIED status in that column —
+the actual verdict lives in the verdicts table. Always use prefetchVerdicts().
 ```
 
 ### 9.5 Reaction Toggle
@@ -392,9 +407,10 @@ App.jsx
 
 | Decision | Rationale |
 |---|---|
-| Single Supabase client | Prevents `NavigatorLockManager` timeout errors from multiple instances competing for the same async lock |
+| Single Supabase client with lock bypass | Prevents `NavigatorLockManager` deadlocks during `getSession()` and `signInWithPassword()` calls by bypassing the lock mechanism entirely (`lock: (_name, _acquireTimeout, fn) => fn()`). Sessions still persist via localStorage; the lock was only needed for cross-tab coordination. This fix eliminates the infinite loading spinner on page refresh. |
 | Auth listener only in `App.jsx` | Prevents duplicate `onAuthStateChange` subscriptions causing ghost SIGNED_IN events during signup |
 | URL-based filter state | Filters are shareable, bookmarkable, and survive page refresh without extra persistence logic |
+| Verdict-based filtering (not column-based) | The `news_items.verification_status` column is not reliable for filtering because verified items retain the default UNVERIFIED value. The actual verdict lives in the `verdicts` table. `prefetchVerdicts()` queries that table first, then filters `news_items` by matching IDs. This is the ONLY correct way to filter by verdict. |
 | Batch reaction queries | A single `SELECT ... IN (ids)` replaces N individual queries on the feed page — critical for performance |
 | Demo mode in Redux | Allows unauthenticated users to access `/feed` without any API auth calls, with a clean permission layer in `ProtectedRoute` |
 | Force email confirmation | Even when Supabase auto-confirms (dashboard setting), the app signs out immediately post-signup to ensure all users go through email verification |
