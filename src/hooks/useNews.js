@@ -173,7 +173,7 @@ export function useBatchUserReactions(newsItemIds = []) {
     queryKey: ["batchUserReactions", stableKey, profile?.id],
     queryFn: () => fetchBatchUserReactions(newsItemIds, profile.id),
     enabled: newsItemIds.length > 0 && !!profile?.id,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 10, // 10 seconds - reduced for faster initial loads
   });
 
   // Seed individual per-item user-reaction caches
@@ -259,14 +259,13 @@ export function useReactToNews() {
         queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], context.previousUserReaction);
       }
     },
-    onSuccess: (_data, variables) => {
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: ["reactionCounts", variables.newsItemId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["userReaction", variables.newsItemId, profile?.id],
-      });
+    onSuccess: (data, variables) => {
+      // Set the data directly from server response instead of invalidating
+      // This keeps the UI instant while ensuring data accuracy
+      if (data) {
+        queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], data);
+      }
+      // No invalidation - optimistic update is already correct
     },
   });
 }
@@ -308,14 +307,9 @@ export function useRemoveReaction() {
         queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], context.previousUserReaction);
       }
     },
-    onSuccess: (_data, variables) => {
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: ["reactionCounts", variables.newsItemId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["userReaction", variables.newsItemId, profile?.id],
-      });
+    onSuccess: () => {
+      // No invalidation - optimistic update is already correct
+      // The removed state is already set to null in onMutate
     },
   });
 }
@@ -388,9 +382,12 @@ export function useToggleBookmark() {
       }
     },
     onSuccess: (data, variables) => {
-      // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["userBookmark", variables.newsItemId] });
-      queryClient.invalidateQueries({ queryKey: ["userBookmarks"] });
+      // Update with server response but don't invalidate to keep it instant
+      if (data) {
+        const isBookmarked = !!data;
+        queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], isBookmarked ? data : null);
+      }
+      // No invalidation - optimistic update is already correct
     },
   });
 }

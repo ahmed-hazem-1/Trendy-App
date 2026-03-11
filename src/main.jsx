@@ -16,6 +16,8 @@ const queryClient = new QueryClient({
     },
     mutations: {
       retry: 0,
+      // Enable immediate updates without waiting
+      networkMode: 'online',
     },
   },
 });
