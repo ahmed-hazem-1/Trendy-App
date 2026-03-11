@@ -26,15 +26,19 @@ FROM nginx:1.27-alpine
 # Remove the default nginx server block
 RUN rm /etc/nginx/conf.d/default.conf
 
-# The official nginx image automatically runs envsubst on files placed in
-# /etc/nginx/templates/ and writes results to /etc/nginx/conf.d/.
-# Cloud Run injects $PORT at runtime; nginx will listen on it.
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+# Copy the template to a non-processed location.
+# start.sh runs envsubst '${PORT}' at container startup so that nginx
+# variables like $uri are NOT touched — only $PORT is replaced.
+COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
 # Copy built static files from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy and wire up the startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 # Cloud Run always uses 8080 by default; EXPOSE is documentation only.
 EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/start.sh"]
