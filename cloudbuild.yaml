@@ -1,45 +1,41 @@
 # Cloud Build configuration for Trendy
 #
-# Uses Artifact Registry (us-central1-docker.pkg.dev) — NOT the deprecated gcr.io.
+# Triggered automatically on push to main.
+# The Artifact Registry repo is created automatically on first run.
 #
-# One-time setup (run once from your local machine or Cloud Shell):
-#   gcloud artifacts repositories create trendy \
-#     --repository-format=docker \
-#     --location=us-central1 \
-#     --project=YOUR_PROJECT_ID
+# Required IAM roles for the Cloud Build service account
+# ([PROJECT_NUMBER]@cloudbuild.gserviceaccount.com):
+#   - Artifact Registry Writer
+#   - Cloud Run Admin
+#   - Service Account User (on the Compute default SA)
 #
-#   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
-#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
-#     --role="roles/artifactregistry.writer"
+# Substitution variables to set in the trigger:
+#   _REGION   — Cloud Run region, e.g. us-central1
+#   _SERVICE  — Cloud Run service name, e.g. trendy-app
+#   _AR_REPO  — Artifact Registry repo name, e.g. trendy
 #
-#   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
-#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
-#     --role="roles/run.admin"
-#
-#   gcloud iam service-accounts add-iam-policy-binding \
-#     $(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')-compute@developer.gserviceaccount.com \
-#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
-#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
-#     --role="roles/iam.serviceAccountUser"
-#
-# Required substitution variables in trigger config:
-#   _VITE_SUPABASE_URL              — Supabase project URL
-#   _VITE_SUPABASE_PUBLISHABLE_KEY  — Supabase anon/publishable key
-#   _REGION                         — Cloud Run region, e.g. us-central1
-#   _SERVICE                        — Cloud Run service name, e.g. trendy-app
-#   _AR_REPO                        — Artifact Registry repo name, e.g. trendy
+# Vite env vars are read from .env.production (committed to repo).
+# No build-arg substitutions needed.
 
 steps:
-  # 1. Build the Docker image, injecting Vite build-time env vars
+  # 0. Create the Artifact Registry repo if it doesn't exist yet (safe to re-run)
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        gcloud artifacts repositories describe ${_AR_REPO} \
+          --location=${_REGION} --project=$PROJECT_ID \
+          > /dev/null 2>&1 || \
+        gcloud artifacts repositories create ${_AR_REPO} \
+          --repository-format=docker \
+          --location=${_REGION} \
+          --project=$PROJECT_ID
+
+  # 1. Build the Docker image (.env.production is committed — no build args needed)
   - name: "gcr.io/cloud-builders/docker"
     args:
       - build
-      - "--build-arg"
-      - "VITE_SUPABASE_URL=${_VITE_SUPABASE_URL}"
-      - "--build-arg"
-      - "VITE_SUPABASE_PUBLISHABLE_KEY=${_VITE_SUPABASE_PUBLISHABLE_KEY}"
       - "-t"
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:$SHORT_SHA"
       - "-t"
