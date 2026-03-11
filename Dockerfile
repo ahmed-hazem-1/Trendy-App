@@ -25,9 +25,10 @@ COPY nginx.conf.template /etc/nginx/nginx.conf.template
 # Copy built static files from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy and wire up the startup script
+# Copy and wire up the startup script.
+# sed strips Windows CRLF line endings (\r) so the shebang is valid on Linux.
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN sed -i 's/\r//' /start.sh && chmod +x /start.sh
 
 # Cloud Run always uses 8080 by default; EXPOSE is documentation only.
 EXPOSE 8080
