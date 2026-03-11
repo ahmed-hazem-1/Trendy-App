@@ -146,7 +146,7 @@ export function useBatchReactionCounts(newsItemIds = []) {
     queryKey: ["batchReactionCounts", stableKey],
     queryFn: () => fetchBatchReactionCounts(newsItemIds),
     enabled: newsItemIds.length > 0,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 10, // 10 seconds - reduced for faster initial loads
   });
 
   // Seed individual per-item caches so old items read from cache on next scroll
