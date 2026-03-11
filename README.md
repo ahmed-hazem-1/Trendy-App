@@ -118,26 +118,61 @@ npm run lint
 
 ---
 
-### Option A — Manual deploy (one command)
+### One-time GCP setup (run once per project)
 
 ```bash
-# 1. Authenticate Docker with Google Container Registry
-gcloud auth configure-docker
+PROJECT_ID=YOUR_PROJECT_ID
+REGION=us-central1
+BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
+
+# Create Artifact Registry Docker repo
+gcloud artifacts repositories create trendy \
+  --repository-format=docker \
+  --location=$REGION \
+  --project=$PROJECT_ID
+
+# Grant Cloud Build SA permission to push images
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${BUILD_SA}" \
+  --role="roles/artifactregistry.writer"
+
+# Grant Cloud Build SA permission to deploy to Cloud Run
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:${BUILD_SA}" \
+  --role="roles/run.admin"
+
+# Allow Cloud Build to act as the Compute default SA (required for Cloud Run deploy)
+gcloud iam service-accounts add-iam-policy-binding \
+  "$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
+  --member="serviceAccount:${BUILD_SA}" \
+  --role="roles/iam.serviceAccountUser"
+```
+
+---
+
+### Option A — Manual deploy
+
+```bash
+PROJECT_ID=YOUR_PROJECT_ID
+REGION=us-central1
+
+# 1. Authenticate Docker with Artifact Registry
+gcloud auth configure-docker ${REGION}-docker.pkg.dev
 
 # 2. Build the image with Vite env vars baked in
 docker build \
   --build-arg VITE_SUPABASE_URL="https://xxxx.supabase.co" \
   --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGc..." \
-  -t gcr.io/YOUR_PROJECT_ID/trendy-app:latest \
+  -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/trendy/trendy-app:latest \
   .
 
-# 3. Push to Container Registry
-docker push gcr.io/YOUR_PROJECT_ID/trendy-app:latest
+# 3. Push to Artifact Registry
+docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/trendy/trendy-app:latest
 
 # 4. Deploy to Cloud Run
 gcloud run deploy trendy-app \
-  --image gcr.io/YOUR_PROJECT_ID/trendy-app:latest \
-  --region us-central1 \
+  --image ${REGION}-docker.pkg.dev/${PROJECT_ID}/trendy/trendy-app:latest \
+  --region $REGION \
   --platform managed \
   --allow-unauthenticated \
   --port 8080 \
@@ -163,6 +198,7 @@ The repo includes `cloudbuild.yaml`. Connect it to a Cloud Build trigger on the 
 | `_VITE_SUPABASE_PUBLISHABLE_KEY` | `eyJhbGc...` |
 | `_REGION` | `us-central1` |
 | `_SERVICE` | `trendy-app` |
+| `_AR_REPO` | `trendy` |
 
 Every push to `main` will automatically build, push, and deploy the container.
 

@@ -1,11 +1,35 @@
 # Cloud Build configuration for Trendy
 #
-# Triggered on push to main branch.
-# Required Cloud Build substitution variables (set in Console or trigger config):
+# Uses Artifact Registry (us-central1-docker.pkg.dev) — NOT the deprecated gcr.io.
+#
+# One-time setup (run once from your local machine or Cloud Shell):
+#   gcloud artifacts repositories create trendy \
+#     --repository-format=docker \
+#     --location=us-central1 \
+#     --project=YOUR_PROJECT_ID
+#
+#   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
+#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
+#     --role="roles/artifactregistry.writer"
+#
+#   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
+#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
+#     --role="roles/run.admin"
+#
+#   gcloud iam service-accounts add-iam-policy-binding \
+#     $(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')-compute@developer.gserviceaccount.com \
+#     --member="serviceAccount:$(gcloud projects describe YOUR_PROJECT_ID \
+#       --format='value(projectNumber)')@cloudbuild.gserviceaccount.com" \
+#     --role="roles/iam.serviceAccountUser"
+#
+# Required substitution variables in trigger config:
 #   _VITE_SUPABASE_URL              — Supabase project URL
 #   _VITE_SUPABASE_PUBLISHABLE_KEY  — Supabase anon/publishable key
 #   _REGION                         — Cloud Run region, e.g. us-central1
 #   _SERVICE                        — Cloud Run service name, e.g. trendy-app
+#   _AR_REPO                        — Artifact Registry repo name, e.g. trendy
 
 steps:
   # 1. Build the Docker image, injecting Vite build-time env vars
@@ -17,14 +41,17 @@ steps:
       - "--build-arg"
       - "VITE_SUPABASE_PUBLISHABLE_KEY=${_VITE_SUPABASE_PUBLISHABLE_KEY}"
       - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE}:$SHORT_SHA"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:$SHORT_SHA"
       - "-t"
-      - "gcr.io/$PROJECT_ID/${_SERVICE}:latest"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:latest"
       - "."
 
-  # 2. Push both tags to Container Registry
+  # 2. Push both tags to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "--all-tags", "gcr.io/$PROJECT_ID/${_SERVICE}"]
+    args:
+      - push
+      - "--all-tags"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}"
 
   # 3. Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -33,7 +60,7 @@ steps:
       - run
       - deploy
       - "${_SERVICE}"
-      - "--image=gcr.io/$PROJECT_ID/${_SERVICE}:$SHORT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:$SHORT_SHA"
       - "--region=${_REGION}"
       - "--platform=managed"
       - "--allow-unauthenticated"
@@ -44,12 +71,13 @@ steps:
       - "--max-instances=10"
 
 images:
-  - "gcr.io/$PROJECT_ID/${_SERVICE}:$SHORT_SHA"
-  - "gcr.io/$PROJECT_ID/${_SERVICE}:latest"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:$SHORT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_SERVICE}:latest"
 
 substitutions:
   _REGION: us-central1
   _SERVICE: trendy-app
+  _AR_REPO: trendy
 
 options:
   logging: CLOUD_LOGGING_ONLY
