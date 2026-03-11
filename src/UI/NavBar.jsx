@@ -1,5 +1,4 @@
 import SearchBar from "./SearchBar";
-import NotificationBell from "./NotificationBell";
 import UserMenu from "./UserMenu";
 import { Link } from "react-router-dom";
 import { Search, X, Menu } from "lucide-react";
@@ -11,13 +10,13 @@ export default function NavBar({ onMenuClick }) {
   return (
     <header className="sticky top-0 z-40 bg-white shadow-sm">
       <nav className="max-w-7xl mx-auto flex items-center justify-between py-2 px-3 sm:px-4 lg:px-6">
-        {/* يمين: البرغر + الشعار + البحث */}
+        {/* يمين: البرغر + الشعار + البحث (RTL) */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-8">
-          {/* Burger icon — mobile/tablet only */}
+          {/* Burger Menu — mobile/tablet only */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition cursor-pointer"
-            aria-label="Open menu"
+            className="hidden lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition cursor-pointer"
+            aria-label="القائمة"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -25,7 +24,7 @@ export default function NavBar({ onMenuClick }) {
             <img
               src="/logo/Trendy - logo - with text.png"
               alt="Trendy"
-              className="h-10 sm:h-12 lg:h-16 w-auto object-contain"
+              className="h-16 sm:h-16 lg:h-20 w-auto object-contain"
             />
           </Link>
           {/* Desktop search */}
@@ -47,8 +46,6 @@ export default function NavBar({ onMenuClick }) {
               <Search className="h-5 w-5" />
             )}
           </button>
-          <NotificationBell />
-          <span className="hidden sm:block h-8 w-px bg-gray-200" />
           <UserMenu />
         </div>
       </nav>

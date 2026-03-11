@@ -19,6 +19,7 @@ import {
   upsertReaction,
   removeReaction,
   toggleBookmark,
+  fetchUserBookmark,
   fetchUserBookmarks,
   fetchNotifications,
   fetchUnreadNotificationCount,
@@ -128,7 +129,7 @@ export function useReactionCounts(newsItemId) {
     queryKey: ["reactionCounts", newsItemId],
     queryFn: () => fetchReactionCounts(newsItemId),
     enabled: !!newsItemId,
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 5, // 5 seconds for faster updates
   });
 }
 
@@ -208,6 +209,7 @@ export function useUserReaction(newsItemId) {
     queryKey: ["userReaction", newsItemId, profile?.id],
     queryFn: () => fetchUserReaction(newsItemId, profile.id),
     enabled: !!newsItemId && !!profile?.id,
+    staleTime: 1000 * 5, // 5 seconds for faster updates
   });
 }
 
@@ -217,9 +219,48 @@ export function useReactToNews() {
 
   return useMutation({
     mutationFn: upsertReaction,
+    onMutate: async ({ newsItemId, userId, reactionType }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["reactionCounts", newsItemId] });
+      await queryClient.cancelQueries({ queryKey: ["userReaction", newsItemId] });
+
+      // Snapshot previous values
+      const previousCounts = queryClient.getQueryData(["reactionCounts", newsItemId]);
+      const previousUserReaction = queryClient.getQueryData(["userReaction", newsItemId, userId]);
+
+      // Optimistically update reaction counts
+      queryClient.setQueryData(["reactionCounts", newsItemId], (old) => {
+        if (!old) return { EXCITED: 0, NEUTRAL: 0, SKEPTICAL: 0, ANGRY: 0, [reactionType]: 1 };
+        const updated = { ...old };
+        // If user had a previous reaction, decrement it
+        if (previousUserReaction?.reaction_type) {
+          updated[previousUserReaction.reaction_type] = Math.max(0, (updated[previousUserReaction.reaction_type] || 0) - 1);
+        }
+        // Increment new reaction
+        updated[reactionType] = (updated[reactionType] || 0) + 1;
+        return updated;
+      });
+
+      // Optimistically update user reaction
+      queryClient.setQueryData(["userReaction", newsItemId, userId], {
+        news_item_id: newsItemId,
+        user_id: userId,
+        reaction_type: reactionType,
+      });
+
+      return { previousCounts, previousUserReaction };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCounts) {
+        queryClient.setQueryData(["reactionCounts", variables.newsItemId], context.previousCounts);
+      }
+      if (context?.previousUserReaction !== undefined) {
+        queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], context.previousUserReaction);
+      }
+    },
     onSuccess: (_data, variables) => {
-      // Invalidate only the specific item's individual caches — not the whole
-      // batch — so other visible cards are unaffected.
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({
         queryKey: ["reactionCounts", variables.newsItemId],
       });
@@ -236,8 +277,39 @@ export function useRemoveReaction() {
 
   return useMutation({
     mutationFn: removeReaction,
+    onMutate: async ({ newsItemId, userId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["reactionCounts", newsItemId] });
+      await queryClient.cancelQueries({ queryKey: ["userReaction", newsItemId] });
+
+      // Snapshot previous values
+      const previousCounts = queryClient.getQueryData(["reactionCounts", newsItemId]);
+      const previousUserReaction = queryClient.getQueryData(["userReaction", newsItemId, userId]);
+
+      // Optimistically update reaction counts (decrement the removed reaction)
+      queryClient.setQueryData(["reactionCounts", newsItemId], (old) => {
+        if (!old || !previousUserReaction?.reaction_type) return old;
+        const updated = { ...old };
+        updated[previousUserReaction.reaction_type] = Math.max(0, (updated[previousUserReaction.reaction_type] || 0) - 1);
+        return updated;
+      });
+
+      // Optimistically clear user reaction
+      queryClient.setQueryData(["userReaction", newsItemId, userId], null);
+
+      return { previousCounts, previousUserReaction };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCounts) {
+        queryClient.setQueryData(["reactionCounts", variables.newsItemId], context.previousCounts);
+      }
+      if (context?.previousUserReaction !== undefined) {
+        queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], context.previousUserReaction);
+      }
+    },
     onSuccess: (_data, variables) => {
-      // Invalidate only the specific item's individual caches.
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({
         queryKey: ["reactionCounts", variables.newsItemId],
       });
@@ -252,6 +324,17 @@ export function useRemoveReaction() {
 // Bookmarks
 // ─────────────────────────────────────────────
 
+export function useUserBookmark(newsItemId) {
+  const profile = useSelector(selectProfile);
+
+  return useQuery({
+    queryKey: ["userBookmark", newsItemId, profile?.id],
+    queryFn: () => fetchUserBookmark(newsItemId, profile.id),
+    enabled: !!newsItemId && !!profile?.id,
+    staleTime: 1000 * 5, // 5 seconds for faster updates
+  });
+}
+
 export function useUserBookmarks() {
   const profile = useSelector(selectProfile);
 
@@ -259,7 +342,7 @@ export function useUserBookmarks() {
     queryKey: ["userBookmarks", profile?.id],
     queryFn: () => fetchUserBookmarks(profile.id),
     enabled: !!profile?.id,
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 5, // 5 seconds for faster updates
   });
 }
 
@@ -268,7 +351,45 @@ export function useToggleBookmark() {
 
   return useMutation({
     mutationFn: toggleBookmark,
-    onSuccess: () => {
+    onMutate: async ({ newsItemId, userId }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["userBookmark", newsItemId] });
+      await queryClient.cancelQueries({ queryKey: ["userBookmarks"] });
+
+      // Snapshot the previous values
+      const previousBookmark = queryClient.getQueryData(["userBookmark", newsItemId, userId]);
+      const previousBookmarks = queryClient.getQueryData(["userBookmarks", userId]);
+
+      // Optimistically update individual bookmark
+      queryClient.setQueryData(["userBookmark", newsItemId, userId], (old) => {
+        return old ? null : { news_item_id: newsItemId, user_id: userId };
+      });
+
+      // Optimistically update bookmarks list
+      queryClient.setQueryData(["userBookmarks", userId], (old) => {
+        if (!old) return old;
+        const isCurrentlyBookmarked = old.some(b => b.news_item_id === newsItemId);
+        if (isCurrentlyBookmarked) {
+          return old.filter(b => b.news_item_id !== newsItemId);
+        } else {
+          return [...old, { news_item_id: newsItemId, user_id: userId, saved_at: new Date().toISOString() }];
+        }
+      });
+
+      return { previousBookmark, previousBookmarks };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousBookmark !== undefined) {
+        queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], context.previousBookmark);
+      }
+      if (context?.previousBookmarks) {
+        queryClient.setQueryData(["userBookmarks", variables.userId], context.previousBookmarks);
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ["userBookmark", variables.newsItemId] });
       queryClient.invalidateQueries({ queryKey: ["userBookmarks"] });
     },
   });

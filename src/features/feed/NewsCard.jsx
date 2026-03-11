@@ -1,5 +1,4 @@
 import {
-  MoreHorizontal,
   Share2,
   PartyPopper,
   ThumbsUp,
@@ -9,6 +8,8 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -21,6 +22,8 @@ import {
   useReactToNews,
   useRemoveReaction,
   useEvidenceItems,
+  useUserBookmark,
+  useToggleBookmark,
 } from "../../hooks/useNews";
 import { selectProfile, selectIsDemoMode } from "../../store/authSlice";
 
@@ -75,6 +78,11 @@ function NewsCard({
   const reactMutation = useReactToNews();
   const removeMutation = useRemoveReaction();
 
+  // Bookmark state
+  const { data: bookmarkData } = useUserBookmark(item.id);
+  const isBookmarked = !!bookmarkData;
+  const toggleBookmarkMutation = useToggleBookmark();
+
   const counts = reactionCounts || {
     EXCITED: 0,
     NEUTRAL: 0,
@@ -98,6 +106,14 @@ function NewsCard({
     }
   }
 
+  function handleBookmark() {
+    if (!profile?.id) return; // must be logged in
+    toggleBookmarkMutation.mutate({
+      newsItemId: item.id,
+      userId: profile.id,
+    });
+  }
+
   // Build a shareable URL for this post
   const postUrl = `${window.location.origin}/posts/${item.id}`;
 
@@ -105,30 +121,49 @@ function NewsCard({
     <>
       <article className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 sm:px-5 pt-3 sm:pt-5 mb-3 sm:mb-4">
-          <div className="flex items-center gap-3">
-            <button className="p-1 rounded hover:bg-gray-100 text-gray-400 cursor-pointer">
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
+        <div className="flex items-center justify-between px-3 sm:px-5 pt-2.5 sm:pt-4 mb-2 sm:mb-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <StatusBadge status={item.verification_status} />
-          </div>
-
-          <div className="flex gap-2.5">
-            <span className="text-xs text-gray-400">{item.timeAgo}</span>
-            <span className="text-xs text-gray-400">•</span>
-            <div className="text-start leading-3">
-              <span className="text-sm font-bold text-gray-700 block">
-                Trendy AI
-              </span>
-              <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wide">
+            {!isDemoMode && (
+              <button
+                onClick={handleBookmark}
+                title={isBookmarked ? "إزالة من المحفوظات" : "حفظ"}
+                className={`p-1 sm:p-1.5 rounded-lg transition cursor-pointer ${
+                  isBookmarked
+                    ? "text-teal-600 bg-teal-50 hover:bg-teal-100"
+                    : "text-gray-400 bg-gray-50 hover:bg-gray-100"
+                }`}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                ) : (
+                  <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                )}
+              </button>
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-teal-50 border border-teal-100">
+              <span className="text-[10px] sm:text-xs font-bold text-teal-700">
                 {item.category || "عام"}
               </span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            <span className="text-[10px] sm:text-xs text-gray-400">{item.timeAgo}</span>
+            <span className="text-[10px] sm:text-xs text-gray-400 hidden sm:inline">•</span>
+            <div className="text-start leading-3 hidden sm:block">
+              <span className="text-xs sm:text-sm font-bold text-gray-700 block">
+                Trendy AI
+              </span>
             </div>
-            <img
-              src="/logo/Trendy-logo-no-text.png"
-              alt="Trendy"
-              className="h-9 w-9 rounded-full object-cover ring-1 ring-gray-200"
-            />
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-teal-400 to-emerald-400 opacity-20 blur-sm"></div>
+              <img
+                src="/logo/Trendy-logo-no-text.png"
+                alt="Trendy"
+                className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full object-cover ring-2 ring-teal-200 shadow-md"
+              />
+            </div>
           </div>
         </div>
 
@@ -137,13 +172,13 @@ function NewsCard({
           to={`/posts/${item.id}`}
           className="block hover:bg-gray-50/50 transition"
         >
-          <h2 className="text-base sm:text-lg duration-200 hover:text-accent-emerald font-bold text-gray-900 leading-snug px-3 sm:px-5 mb-1">
+          <h2 className="text-sm sm:text-base lg:text-lg duration-200 hover:text-accent-emerald font-bold text-gray-900 leading-snug px-3 sm:px-5 mb-2 sm:mb-3">
             {item.title}
           </h2>
 
           {/* Subtitle */}
           {item.content && (
-            <p className="text-sm text-gray-500 px-3 sm:px-5 mb-3 sm:mb-4 line-clamp-2">
+            <p className="text-xs sm:text-sm text-gray-500 px-3 sm:px-5 mb-3 sm:mb-4 line-clamp-2">
               {item.content}
             </p>
           )}
@@ -154,28 +189,28 @@ function NewsCard({
           <div className="px-3 sm:px-5 mb-3 sm:mb-4">
             <button
               onClick={() => setInsightOpen(!insightOpen)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-2.5 ms-auto cursor-pointer hover:text-gray-700 transition"
+              className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 ms-auto cursor-pointer hover:text-gray-700 transition"
             >
               تحليل التحقق بالذكاء الاصطناعي
-              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-teal-500" />
             </button>
 
             {insightOpen && (
               <>
-                <div className="rounded-xl bg-amber-50 border border-amber-100 p-4 mb-2">
-                  <p className="text-sm text-gray-700 leading-relaxed text-right">
+                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 sm:p-4 mb-3">
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed text-right">
                     &ldquo;{item.reasoning}&rdquo;
                   </p>
                 </div>
                 <button
                   onClick={() => setSourcesOpen(!sourcesOpen)}
-                  className="w-full flex items-center justify-center gap-1 text-center text-xs font-semibold text-gray-500 hover:text-gray-700 transition cursor-pointer"
+                  className="w-full flex items-center justify-center gap-1 text-center text-[10px] sm:text-xs font-semibold text-gray-500 hover:text-gray-700 transition cursor-pointer"
                 >
                   {sourcesOpen ? "إخفاء مصادر التحقق" : "عرض مصادر التحقق"}
                   {sourcesOpen ? (
-                    <ChevronUp className="h-3.5 w-3.5" />
+                    <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   ) : (
-                    <ChevronDown className="h-3.5 w-3.5" />
+                    <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   )}
                 </button>
 
@@ -241,11 +276,11 @@ function NewsCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3.5 border-t border-gray-100">
+        <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-t border-gray-100">
           {isDemoMode ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Info className="h-4 w-4 text-teal-500" />
-              <span className="text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500">
+              <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal-500" />
+              <span className="text-[10px] sm:text-xs">
                 للتفاعل مع الأخبار،{" "}
                 <Link
                   to="/signup"
@@ -263,7 +298,7 @@ function NewsCard({
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {REACTION_CONFIG.map(
                 ({ type, icon: Icon, label, activeColor }) => {
                   const isActive = userReaction?.reaction_type === type;
@@ -272,20 +307,20 @@ function NewsCard({
                       key={type}
                       onClick={() => handleReaction(type)}
                       title={label}
-                      className={`flex items-center gap-1 text-sm cursor-pointer transition ${
+                      className={`flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm cursor-pointer transition ${
                         isActive
                           ? activeColor
                           : "text-gray-400 hover:text-gray-600"
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
-                      {counts[type] > 0 && <span>{counts[type]}</span>}
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      {counts[type] > 0 && <span className="text-[10px] sm:text-xs">{counts[type]}</span>}
                     </button>
                   );
                 },
               )}
               {totalReactions > 0 && (
-                <span className="text-xs text-gray-300 mr-1">
+                <span className="text-[10px] sm:text-xs text-gray-300 mr-1">
                   {totalReactions}
                 </span>
               )}
@@ -293,10 +328,10 @@ function NewsCard({
           )}
           <button
             onClick={() => setShareOpen(true)}
-            className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm font-medium cursor-pointer transition"
+            className="flex items-center gap-1 sm:gap-1.5 text-gray-500 hover:text-gray-700 text-xs sm:text-sm font-medium cursor-pointer transition"
           >
-            <Share2 className="h-4 w-4" />
-            مشاركة
+            <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">مشاركة</span>
           </button>
         </div>
       </article>

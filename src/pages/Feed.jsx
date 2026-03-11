@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo } from "react";
+import { useRef, useEffect, useCallback, useMemo, useState } from "react";
 import {
   useOutletContext,
   useSearchParams,
@@ -8,6 +8,7 @@ import FilterTabs from "../features/feed/FilterTabs";
 import NewsCard from "../features/feed/NewsCard";
 import UserSidebar from "../features/feed/UserSidebar";
 import TrendingSidebar from "../features/feed/TrendingSidebar";
+import BottomSheet from "../UI/BottomSheet";
 import MobileSidebar from "../UI/MobileSidebar";
 import {
   useNewsItems,
@@ -62,7 +63,13 @@ export default function Feed() {
   const activeFilter = searchParams.get("filter") || "ALL";
   const activeCategory = searchParams.get("category") || "all";
 
-  const { sidebarOpen, closeSidebar } = useOutletContext();
+  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet, openBottomSheet } = useOutletContext();
+  const [localBottomSheetOpen, setLocalBottomSheetOpen] = useState(false);
+
+  // Use context state if available (from AppLayout), otherwise use local state
+  const isBottomSheetOpen = bottomSheetOpen !== undefined ? bottomSheetOpen : localBottomSheetOpen;
+  const handleCloseBottomSheet = closeBottomSheet || (() => setLocalBottomSheetOpen(false));
+  const handleOpenBottomSheet = openBottomSheet || (() => setLocalBottomSheetOpen(true));
 
   // Use navigate() directly so all useSearchParams consumers re-render.
   // Read from window.location.search for always-fresh params.
@@ -204,7 +211,7 @@ export default function Feed() {
 
   return (
     <>
-      {/* Mobile sidebar drawer */}
+      {/* Mobile sidebar for profile & categories */}
       <MobileSidebar
         isOpen={sidebarOpen}
         onClose={closeSidebar}
@@ -212,7 +219,15 @@ export default function Feed() {
         onCategoryChange={handleCategoryChange}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_350px] gap-4 sm:gap-6">
+      {/* Bottom sheet for mobile categories */}
+      <BottomSheet
+        isOpen={isBottomSheetOpen}
+        onClose={handleCloseBottomSheet}
+        activeCategory={activeCategory}
+        onCategoryChange={handleCategoryChange}
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_350px] gap-4 sm:gap-6 pb-20 lg:pb-0">
         {/* Left Sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar

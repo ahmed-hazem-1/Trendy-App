@@ -9,6 +9,9 @@ import {
   X,
   Camera,
   Heart,
+  Bookmark,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
@@ -16,11 +19,15 @@ import FormInput from "../UI/FormInput";
 import FormSelect from "../UI/FormSelect";
 import Button from "../UI/Button";
 import MobileSidebar from "../UI/MobileSidebar";
+import BottomSheet from "../UI/BottomSheet";
 import { EGYPT_GOVERNORATES } from "../utils/constants";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
+import { useUserBookmarks, useToggleBookmark } from "../hooks/useNews";
+import StatusBadge from "../features/feed/StatusBadge";
+import { Link } from "react-router-dom";
 
 const INTEREST_OPTIONS = [
   { key: "technology", label: "تكنولوجيا", emoji: "💻" },
@@ -47,8 +54,10 @@ const FALLBACK_USER = {
 };
 
 export default function Profile() {
-  const { sidebarOpen, closeSidebar } = useOutletContext();
+  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
   const { profile, refreshProfile } = useAuth();
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
+  const toggleBookmarkMutation = useToggleBookmark();
   const [activeCategory, setActiveCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -141,6 +150,14 @@ export default function Profile() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleRemoveBookmark(newsItemId) {
+    if (!profile?.id) return;
+    toggleBookmarkMutation.mutate({
+      newsItemId,
+      userId: profile.id,
+    });
   }
 
   const locationLabel =
@@ -442,6 +459,114 @@ export default function Profile() {
             )}
           </div>
 
+          {/* ── Saved Posts Section ── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Bookmark className="h-4 w-4 text-teal-500" />
+                <Link to="/saved" className="hover:text-teal-600 transition">
+                  <h2 className="text-base font-bold text-gray-900">الأخبار المحفوظة</h2>
+                </Link>
+                {bookmarks.length > 0 && (
+                  <span className="text-xs text-gray-500">({bookmarks.length})</span>
+                )}
+              </div>
+              {bookmarks.length > 3 && (
+                <Link
+                  to="/saved"
+                  className="text-xs font-medium text-teal-600 hover:text-teal-700 transition"
+                >
+                  عرض الكل ←
+                </Link>
+              )}
+            </div>
+
+            {bookmarksLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-teal-600"></div>
+                <p className="text-sm text-gray-500 mt-2">جارٍ التحميل...</p>
+              </div>
+            ) : bookmarks.length === 0 ? (
+              <div className="text-center py-12">
+                <Bookmark className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">لا توجد أخبار محفوظة</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  احفظ الأخبار المهمة للرجوع إليها لاحقاً
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {bookmarks.slice(0, 3).map((bookmark) => {
+                  const newsItem = bookmark.news_items;
+                  if (!newsItem) return null;
+                  
+                  const category = newsItem.news_categories?.[0]?.categories?.name || "عام";
+                  const savedDate = new Date(bookmark.saved_at).toLocaleDateString("ar-EG", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  });
+
+                  return (
+                    <div
+                      key={bookmark.id}
+                      className="rounded-lg border border-gray-100 bg-gray-50 p-3 hover:bg-gray-100 transition"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <StatusBadge status={newsItem.verification_status} />
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-teal-600 font-medium">
+                              {category}
+                            </span>
+                          </div>
+                          <Link
+                            to={`/posts/${newsItem.id}`}
+                            className="block group"
+                          >
+                            <h3 className="text-sm font-semibold text-gray-800 group-hover:text-teal-600 transition line-clamp-2 mb-1">
+                              {newsItem.title}
+                            </h3>
+                          </Link>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-gray-400">
+                              حُفظ في {savedDate}
+                            </span>
+                            {bookmark.note && (
+                              <>
+                                <span className="text-xs text-gray-300">•</span>
+                                <span className="text-xs text-gray-500 italic line-clamp-1">
+                                  {bookmark.note}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link
+                            to={`/posts/${newsItem.id}`}
+                            className="p-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-white transition"
+                            title="عرض الخبر"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                          <button
+                            onClick={() => handleRemoveBookmark(newsItem.id)}
+                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-white transition"
+                            title="إزالة من المحفوظات"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Mobile / tablet ads — shown below the profile content */}
           <MobileAdStrip />
         </section>
@@ -453,6 +578,12 @@ export default function Profile() {
           ))}
         </aside>
       </div>
+      <BottomSheet
+        isOpen={bottomSheetOpen}
+        onClose={closeBottomSheet}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
     </>
   );
 }

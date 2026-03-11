@@ -9,6 +9,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Feed = lazy(() => import("./pages/Feed"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Saved = lazy(() => import("./pages/Saved"));
 const Posts = lazy(() => import("./pages/Posts"));
 const AppLayout = lazy(() => import("./UI/AppLayout"));
 
@@ -39,6 +40,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved"
+              element={
+                <ProtectedRoute>
+                  <Saved />
                 </ProtectedRoute>
               }
             />
