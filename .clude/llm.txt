@@ -1,0 +1,221 @@
+# LLM EXECUTION INSTRUCTIONS
+## Project: React Frontend → Supabase Integration
+
+You are a senior full-stack engineer operating inside this codebase.
+
+Your task is to connect the existing React frontend to Supabase using the provided environment variables and database schema.
+
+This is a real production integration.
+Do NOT mock data.
+Do NOT assume table structures.
+Always derive structure from the schema file.
+
+------------------------------------------------------------
+STEP 1 — READ DATABASE SCHEMA
+------------------------------------------------------------
+
+1. Open and analyze:
+
+   /Schema/schema.sql
+
+2. Extract:
+   - All tables
+   - Primary keys
+   - Foreign keys
+   - Relations between tables
+   - User-related tables
+   - Role columns (if exist)
+   - Junction tables (many-to-many)
+
+3. Build a mental relational model of the database.
+4. Do NOT hardcode assumptions.
+5. All queries must match the schema exactly.
+
+------------------------------------------------------------
+STEP 2 — SUPABASE CONFIGURATION
+------------------------------------------------------------
+
+Environment variables already exist in .env:
+
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
+
+Create:
+
+src/lib/supabaseClient.ts
+
+- Initialize Supabase client using env variables
+- Export configured client
+- Never expose service role key
+- Only use anon key in frontend
+
+------------------------------------------------------------
+STEP 3 — AUTHENTICATION FLOW
+------------------------------------------------------------
+
+Use Supabase Auth.
+
+Implement:
+
+- Sign Up
+- Login
+- Logout
+- Session persistence
+- Auth state listener
+
+On app load:
+- Check existing session
+- Store authenticated user in Redux
+- Listen to auth state changes
+
+------------------------------------------------------------
+AUTHORIZATION RULES
+------------------------------------------------------------
+
+If NOT authenticated:
+- Can browse public content
+- Can read posts/news
+- Cannot create/update/delete
+- Cannot like/comment/save
+
+If authenticated:
+- Can create content
+- Can edit/delete only OWN content
+- Can interact with posts
+- Must not mutate other users' rows
+
+If roles exist in schema:
+- Implement role-based access control
+- Admin can manage broader resources
+- Regular users restricted to own resources
+
+------------------------------------------------------------
+STEP 4 — STATE MANAGEMENT ARCHITECTURE
+------------------------------------------------------------
+
+You MUST use:
+
+- React Query → server state
+- Redux Toolkit → authentication + global UI state
+- Axios → API abstraction layer
+
+Folder structure:
+
+src/
+  api/
+    axiosInstance.ts
+    authApi.ts
+    postApi.ts
+
+  hooks/
+    useAuth.ts
+    usePosts.ts
+
+  store/
+    store.ts
+    authSlice.ts
+
+  lib/
+    supabaseClient.ts
+
+  routes/
+    ProtectedRoute.tsx
+
+------------------------------------------------------------
+STEP 5 — DATA FETCHING RULES
+------------------------------------------------------------
+
+- All database fetching must use React Query.
+- Use proper query keys.
+- Use mutations for create/update/delete.
+- Invalidate queries after mutations.
+- Implement optimistic updates where logical.
+- Use staleTime to prevent excessive refetching.
+- Add pagination if tables are large.
+
+------------------------------------------------------------
+STEP 6 — RELATIONAL QUERIES
+------------------------------------------------------------
+
+When relationships exist, use Supabase relational select:
+
+Example pattern:
+
+supabase
+  .from('<table>')
+  .select(`
+    *,
+    related_table (*)
+  `)
+
+Respect foreign keys defined in schema.sql.
+
+------------------------------------------------------------
+STEP 7 — PROTECTED ROUTES
+------------------------------------------------------------
+
+Create ProtectedRoute component.
+
+Behavior:
+- If not authenticated → redirect to login
+- If authenticated → render component
+
+Ensure:
+- Route guard checks Redux auth state
+- Session refresh handled properly
+
+------------------------------------------------------------
+STEP 8 — SECURITY REQUIREMENTS
+------------------------------------------------------------
+
+- Never expose service role key
+- Respect RLS if defined in schema
+- Enforce user-only row mutations
+- Handle expired session properly
+- Gracefully handle unauthorized attempts
+
+------------------------------------------------------------
+STEP 9 — ERROR & EDGE CASE HANDLING
+------------------------------------------------------------
+
+Handle:
+- Network failures
+- Expired session
+- Unauthorized mutation
+- Empty states
+- Loading states
+
+Return meaningful error messages.
+
+------------------------------------------------------------
+STEP 10 — CODE QUALITY RULES
+------------------------------------------------------------
+
+- Use TypeScript strictly
+- No any types
+- Clean architecture
+- Modular structure
+- Comment complex logic
+- Production-ready patterns only
+
+------------------------------------------------------------
+FINAL EXPECTED RESULT
+------------------------------------------------------------
+
+The application must:
+
+- Be fully connected to Supabase
+- Support public browsing
+- Support authenticated user interactions
+- Enforce authorization rules
+- Use React Query + Redux + Axios correctly
+- Be scalable and production-ready
+
+DO NOT:
+- Mock data
+- Guess table names
+- Hardcode schema
+- Bypass authentication logic
+
+Always read schema.sql first.
+Then implement integration accordingly.

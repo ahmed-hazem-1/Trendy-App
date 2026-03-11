@@ -1,0 +1,478 @@
+import { useForm, Controller } from "react-hook-form";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Pencil,
+  Save,
+  X,
+  Camera,
+  Heart,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
+import FormInput from "../UI/FormInput";
+import FormSelect from "../UI/FormSelect";
+import Button from "../UI/Button";
+import MobileSidebar from "../UI/MobileSidebar";
+import { EGYPT_GOVERNORATES } from "../utils/constants";
+import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
+import { MOCK_ADS } from "../utils/adsData";
+import { useAuth } from "../hooks/useAuth";
+import { updateUserProfile } from "../api/authApi";
+
+const INTEREST_OPTIONS = [
+  { key: "technology", label: "تكنولوجيا", emoji: "💻" },
+  { key: "politics", label: "سياسة", emoji: "🏛️" },
+  { key: "sports", label: "رياضة", emoji: "⚽" },
+  { key: "social", label: "مجتمع", emoji: "👥" },
+  { key: "economy", label: "اقتصاد", emoji: "📈" },
+  { key: "health", label: "صحة", emoji: "🏥" },
+  { key: "science", label: "علوم", emoji: "🔬" },
+  { key: "entertainment", label: "ترفيه", emoji: "🎬" },
+  { key: "education", label: "تعليم", emoji: "📚" },
+  { key: "environment", label: "بيئة", emoji: "🌍" },
+];
+
+// Mock user data — replace with real data from Supabase
+const FALLBACK_USER = {
+  fullName: "",
+  email: "",
+  phone: "",
+  location: "",
+  bio: "",
+  interests: [],
+  avatar: "/logo/Trendy-logo-no-text.png",
+};
+
+export default function Profile() {
+  const { sidebarOpen, closeSidebar } = useOutletContext();
+  const { profile, refreshProfile } = useAuth();
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Derive user data from profile (Supabase public.users row)
+  const userData = profile
+    ? {
+        fullName: profile.full_name || profile.display_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        location: profile.location || "",
+        bio: profile.bio || "",
+        interests: [],
+        avatar: profile.avatar_url || "/logo/Trendy-logo-no-text.png",
+      }
+    : FALLBACK_USER;
+
+  const [interests, setInterests] = useState(userData.interests);
+  const [bio, setBio] = useState(userData.bio);
+  const [editingBio, setEditingBio] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      fullName: userData.fullName,
+      email: userData.email,
+      phone: userData.phone,
+      location: userData.location,
+    },
+  });
+
+  // Sync form defaults when profile loads
+  useEffect(() => {
+    if (profile) {
+      reset({
+        fullName: profile.full_name || profile.display_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        location: profile.location || "",
+      });
+      setBio(profile.bio || "");
+    }
+  }, [profile, reset]);
+
+  async function onSubmit(data) {
+    if (!profile?.id) return;
+    setIsLoading(true);
+    try {
+      await updateUserProfile(profile.id, {
+        full_name: data.fullName,
+        display_name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        location: data.location,
+      });
+      await refreshProfile();
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Profile update error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleCancel() {
+    reset();
+    setIsEditing(false);
+  }
+
+  function toggleInterest(key) {
+    setInterests((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  }
+
+  async function handleBioSave() {
+    if (!profile?.id) return;
+    setIsLoading(true);
+    try {
+      await updateUserProfile(profile.id, { bio });
+      await refreshProfile();
+      setEditingBio(false);
+    } catch (err) {
+      console.error("Bio update error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const locationLabel =
+    EGYPT_GOVERNORATES.find((g) => g.value === userData.location)?.label || "";
+
+  return (
+    <>
+      <MobileSidebar
+        isOpen={sidebarOpen}
+        onClose={closeSidebar}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
+        {/* Right ads sidebar — all 4 ads at lg, only first 2 at xl */}
+        <aside className="hidden lg:block sticky top-24 self-start space-y-4">
+          {/* First 2 ads — always visible at lg+ */}
+          {MOCK_ADS.slice(0, 2).map((ad) => (
+            <AdCard key={ad.id} ad={ad} variant="sidebar" />
+          ))}
+          {/* Last 2 ads — only in this sidebar at lg, hidden at xl (move to left sidebar) */}
+          <div className="xl:hidden space-y-4">
+            <div className="flex items-center gap-2 pt-1">
+              <div className="h-px flex-1 bg-gray-100" />
+              <span className="text-[10px] text-gray-300">المزيد</span>
+              <div className="h-px flex-1 bg-gray-100" />
+            </div>
+            {MOCK_ADS.slice(2).map((ad) => (
+              <AdCard key={ad.id} ad={ad} variant="sidebar" />
+            ))}
+          </div>
+        </aside>
+
+        {/* Main profile content */}
+        <section className="min-w-0 space-y-5">
+          {/* Premium banner on mobile */}
+          <PremiumBanner />
+          {/* ── Profile Header Card ── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            {/* Banner */}
+            <div className="h-28 sm:h-36 lg:h-44 bg-linear-to-r from-teal-500 to-emerald-400 relative">
+              <button className="absolute bottom-3 left-3 sm:left-4 p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition cursor-pointer backdrop-blur-sm">
+                <Camera className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Avatar */}
+            <div className="flex justify-center -mt-14 sm:-mt-16">
+              <div className="relative">
+                <img
+                  src={userData.avatar}
+                  alt={userData.fullName}
+                  className="h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-4 ring-white shadow-lg"
+                />
+                <button className="absolute bottom-1 right-1 p-1.5 rounded-full bg-teal-500 text-white hover:bg-teal-600 transition cursor-pointer shadow-md">
+                  <Camera className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Name & subtitle */}
+            <div className="text-center px-4 sm:px-6 pt-3 pb-5 sm:pb-6">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                {userData.fullName}
+              </h1>
+              <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-500">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{locationLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Bio Section ── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-gray-900">نبذة عني</h2>
+              {!editingBio && (
+                <button
+                  onClick={() => setEditingBio(true)}
+                  className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 transition cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  تعديل
+                </button>
+              )}
+            </div>
+
+            {editingBio ? (
+              <div className="space-y-3">
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  maxLength={300}
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-teal-400 focus:ring-1 focus:ring-teal-200 resize-none"
+                  placeholder="اكتب نبذة مختصرة عنك..."
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">
+                    {bio.length}/300 حرف
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setBio(userData.bio);
+                        setEditingBio(false);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-100 transition cursor-pointer"
+                    >
+                      إلغاء
+                    </button>
+                    <button
+                      onClick={handleBioSave}
+                      disabled={isLoading}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="h-3 w-3" />
+                      {isLoading ? "جارٍ الحفظ..." : "حفظ"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {bio || "لم تتم إضافة نبذة بعد."}
+              </p>
+            )}
+          </div>
+
+          {/* ── Interests Section ── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Heart className="h-4 w-4 text-teal-500" />
+              <h2 className="text-base font-bold text-gray-900">الاهتمامات</h2>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              اختر المواضيع التي تهمك لتخصيص تجربتك في Trendy
+            </p>
+            <div className="flex flex-wrap gap-2 sm:gap-2.5">
+              {INTEREST_OPTIONS.map(({ key, label, emoji }) => {
+                const active = interests.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => toggleInterest(key)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition cursor-pointer ${
+                      active
+                        ? "bg-teal-50 text-teal-700 border-teal-300 shadow-sm"
+                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Personal Information Section ── */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-bold text-gray-900">
+                المعلومات الشخصية
+              </h2>
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 transition cursor-pointer"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  تعديل
+                </button>
+              )}
+            </div>
+
+            {isEditing ? (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 px-1">
+                    الاسم الكامل
+                  </label>
+                  <FormInput
+                    icon={User}
+                    placeholder="الاسم الكامل"
+                    error={errors.fullName}
+                    register={register("fullName", {
+                      required: "الاسم الكامل مطلوب",
+                      minLength: {
+                        value: 3,
+                        message: "الاسم يجب أن يكون 3 أحرف على الأقل",
+                      },
+                    })}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 px-1">
+                    البريد الإلكتروني
+                  </label>
+                  <FormInput
+                    icon={Mail}
+                    type="email"
+                    placeholder="البريد الإلكتروني"
+                    error={errors.email}
+                    register={register("email", {
+                      required: "البريد الإلكتروني مطلوب",
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "أدخل بريد إلكتروني صحيح",
+                      },
+                    })}
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 px-1">
+                    رقم الهاتف
+                  </label>
+                  <FormInput
+                    icon={Phone}
+                    type="tel"
+                    prefix="+20"
+                    placeholder="1XXXXXXXXX"
+                    error={errors.phone}
+                    register={register("phone", {
+                      required: "رقم الهاتف مطلوب",
+                      pattern: {
+                        value: /^1[0125]\d{8}$/,
+                        message: "أدخل رقم هاتف مصري صحيح",
+                      },
+                    })}
+                  />
+                </div>
+
+                {/* Location */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1.5 px-1">
+                    المحافظة
+                  </label>
+                  <Controller
+                    name="location"
+                    control={control}
+                    rules={{ required: "الموقع مطلوب" }}
+                    render={({ field: { value, onChange, name } }) => (
+                      <FormSelect
+                        icon={MapPin}
+                        placeholder="اختر المحافظة"
+                        options={EGYPT_GOVERNORATES}
+                        error={errors.location}
+                        name={name}
+                        value={value}
+                        onChange={onChange}
+                      />
+                    )}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="cursor-pointer"
+                  >
+                    <Save className="h-4 w-4" />
+                    حفظ التغييرات
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleCancel}
+                    className="cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                    إلغاء
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <InfoRow icon={User} label="الاسم" value={userData.fullName} />
+                <InfoRow
+                  icon={Mail}
+                  label="البريد الإلكتروني"
+                  value={userData.email}
+                />
+                <InfoRow
+                  icon={Phone}
+                  label="رقم الهاتف"
+                  value={userData.phone ? `+20${userData.phone}` : "—"}
+                  dir="ltr"
+                />
+                <InfoRow icon={MapPin} label="المحافظة" value={locationLabel} />
+              </div>
+            )}
+          </div>
+
+          {/* Mobile / tablet ads — shown below the profile content */}
+          <MobileAdStrip />
+        </section>
+
+        {/* Left ads sidebar — visible xl only (last 2 ads) */}
+        <aside className="hidden xl:block sticky top-24 self-start space-y-4">
+          {MOCK_ADS.slice(2).map((ad) => (
+            <AdCard key={ad.id} ad={ad} variant="sidebar" />
+          ))}
+        </aside>
+      </div>
+    </>
+  );
+}
+
+function InfoRow({ icon, label, value, dir }) {
+  const Icon = icon;
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
+      <div className="h-9 w-9 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+        <Icon className="h-4 w-4 text-gray-400" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+        <p
+          className={`text-sm font-medium text-gray-800 truncate ${dir === "ltr" ? "text-left" : ""}`}
+          dir={dir}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}

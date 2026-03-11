@@ -1,0 +1,58 @@
+import { Sparkles, Smartphone, Megaphone, Mail } from "lucide-react";
+
+const MOCK_ADS = [
+  {
+    id: 1,
+    title: "Trendy Premium",
+    description: "احصل على تحليلات متقدمة وتحقق أسرع من الأخبار",
+    cta: "جرّب مجاناً",
+    gradient: "from-teal-500 to-emerald-400",
+    bgGradient: "from-teal-50 to-emerald-50",
+    iconBg: "bg-teal-100 text-teal-600",
+    ctaHover: "hover:shadow-teal-200/50",
+    icon: Sparkles,
+    badge: "الأكثر شعبية",
+    badgeColor: "bg-teal-100 text-teal-700",
+  },
+  {
+    id: 2,
+    title: "تطبيق Trendy",
+    description: "حمّل التطبيق الآن واحصل على إشعارات فورية للأخبار العاجلة",
+    cta: "تحميل الآن",
+    gradient: "from-blue-500 to-indigo-500",
+    bgGradient: "from-blue-50 to-indigo-50",
+    iconBg: "bg-blue-100 text-blue-600",
+    ctaHover: "hover:shadow-blue-200/50",
+    icon: Smartphone,
+    badge: null,
+    badgeColor: "",
+  },
+  {
+    id: 3,
+    title: "أعلن معنا",
+    description: "وصل إعلانك لآلاف المستخدمين المهتمين بالأخبار الموثوقة",
+    cta: "تواصل معنا",
+    gradient: "from-amber-400 to-orange-500",
+    bgGradient: "from-amber-50 to-orange-50",
+    iconBg: "bg-amber-100 text-amber-600",
+    ctaHover: "hover:shadow-amber-200/50",
+    icon: Megaphone,
+    badge: null,
+    badgeColor: "",
+  },
+  {
+    id: 4,
+    title: "النشرة الإخبارية",
+    description: "اشترك في نشرتنا الأسبوعية لتصلك أهم الأخبار المحققة",
+    cta: "اشترك الآن",
+    gradient: "from-purple-500 to-pink-500",
+    bgGradient: "from-purple-50 to-pink-50",
+    iconBg: "bg-purple-100 text-purple-600",
+    ctaHover: "hover:shadow-purple-200/50",
+    icon: Mail,
+    badge: "جديد",
+    badgeColor: "bg-purple-100 text-purple-700",
+  },
+];
+
+export { MOCK_ADS };
