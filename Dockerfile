@@ -3,15 +3,6 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Accept Vite env vars as build-time arguments.
-# Cloud Run / Cloud Build must pass these via --build-arg.
-# They are baked into the JS bundle by Vite — they are NOT runtime secrets.
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_PUBLISHABLE_KEY
-
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
-
 # Install dependencies first (separate layer for better caching)
 COPY package*.json ./
 RUN npm ci

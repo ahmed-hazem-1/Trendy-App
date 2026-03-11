@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 .env
+.env.local
+.env.development.local
+.env.production.local
+# .env.production is intentionally tracked — it contains only the public Supabase anon key
 Schema
 
 # Editor directories and files

@@ -5,11 +5,14 @@ node_modules/
 dist/
 dist-ssr/
 
-# Local environment files — NEVER bake secrets into the image.
-# Pass VITE_* vars as --build-arg at docker build time instead.
+# Local .env files — .env.production is intentionally committed and included
+# (Supabase publishable/anon key is a public-facing client key, not a secret).
 .env
-.env.*
-!.env.example
+.env.local
+.env.development
+.env.development.local
+.env.production.local
+.env.test
 
 # Git
 .git/
