@@ -355,21 +355,20 @@ export async function fetchUserReaction(newsItemId, userId) {
  * Add or update a reaction on a news item.
  */
 export async function upsertReaction({ newsItemId, userId, reactionType }) {
-  // Remove existing reaction first
-  await supabase
-    .from("news_reactions")
-    .delete()
-    .eq("news_item_id", newsItemId)
-    .eq("user_id", userId);
-
-  // Insert new reaction
+  // Use native upsert to avoid race conditions and 409 conflicts
   const { data, error } = await supabase
     .from("news_reactions")
-    .insert({
-      news_item_id: newsItemId,
-      user_id: userId,
-      reaction_type: reactionType,
-    })
+    .upsert(
+      {
+        news_item_id: newsItemId,
+        user_id: userId,
+        reaction_type: reactionType,
+      },
+      {
+        onConflict: "news_item_id,user_id", // Specify unique constraint columns
+        ignoreDuplicates: false, // Update on conflict
+      }
+    )
     .select()
     .single();
 
