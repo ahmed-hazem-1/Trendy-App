@@ -19,9 +19,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    // Use localStorage instead of the default lock-based storage to avoid
-    // Navigator LockManager contention in StrictMode / across tabs.
     flowType: "pkce",
     storageKey: "sb-trendy-auth-token",
+    // Bypass Navigator LockManager to prevent deadlocks that cause
+    // getSession() to hang indefinitely (especially in StrictMode / on refresh).
+    lock: (_name, _acquireTimeout, fn) => fn(),
   },
 });

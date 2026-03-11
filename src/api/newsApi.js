@@ -37,66 +37,89 @@ async function attachVerdicts(newsItems, existingVerdictMap) {
   }));
 }
 
-/**
- * Targeted verdict pre-fetch for filtering.
- * - "ALL": no pre-fetch needed; verdicts attached after page fetch.
- * - "UNVERIFIED": fetch only news_ids that have verdicts (to exclude them).
- * - "TRUE"/"FALSE"/"MISLEADING": fetch only matching verdicts.
- */
-async function prefetchVerdicts(verificationStatus) {
-  const needsFilter = verificationStatus && verificationStatus !== "ALL";
-
-  if (!needsFilter) {
-    // Skip heavy full-table scan — verdicts will be batch-attached per page.
-    return { filter: null, verdictMap: null };
-  }
-
-  const upper = verificationStatus.toUpperCase();
-
-  if (upper === "UNVERIFIED") {
-    // Only need IDs (minimal columns) to build the exclusion list.
-    const { data: verdictIds, error } = await supabase
-      .from("verdicts")
-      .select("news_id");
-
-    if (error) {
-      console.warn("Failed to fetch verdict IDs:", error.message);
-      return { filter: null, verdictMap: null };
-    }
-
-    const ids = (verdictIds || []).map((v) => Number(v.news_id));
-    return { filter: { mode: "exclude", ids }, verdictMap: null };
-  }
-
-  // For TRUE / FALSE / MISLEADING — only fetch matching verdicts
-  const { data: matchingVerdicts, error } = await supabase
-    .from("verdicts")
-    .select("news_id, verdict, confidence, reasoning, sources_used")
-    .eq("verdict", upper);
-
-  if (error) {
-    console.warn("Failed to fetch verdicts:", error.message);
-    return { filter: null, verdictMap: null };
-  }
-
-  const verdictMap = new Map();
-  const matchingIds = [];
-  (matchingVerdicts || []).forEach((v) => {
-    const nid = Number(v.news_id);
-    verdictMap.set(nid, v);
-    matchingIds.push(nid);
-  });
-
-  return { filter: { mode: "include", ids: matchingIds }, verdictMap };
-}
-
 // ─────────────────────────────────────────────
 // News Items
 // ─────────────────────────────────────────────
 
 /**
+ * Map frontend filter keys to the verdict values stored in the DB.
+ * The verdicts table may use TRUE/FALSE or VERIFIED/FAKE — we accept both.
+ */
+const VERDICT_ALIASES = {
+  VERIFIED: ["VERIFIED", "TRUE"],
+  FAKE: ["FAKE", "FALSE"],
+  MISLEADING: ["MISLEADING"],
+};
+
+/**
+ * Pre-fetch verdict IDs for server-side filtering (see PRD §9.4).
+ *
+ * - Specific status (VERIFIED, FAKE, MISLEADING): fetch matching verdict
+ *   news_ids → mode "include" (only show those items).
+ * - UNVERIFIED: fetch ALL verdict news_ids → mode "exclude" (show items
+ *   that have no verdict).
+ * - ALL / falsy: no filtering needed.
+ */
+async function prefetchVerdicts(verificationStatus) {
+  if (!verificationStatus || verificationStatus === "ALL") {
+    return { filter: null, verdictMap: null };
+  }
+
+  const upperStatus = verificationStatus.toUpperCase();
+
+  if (upperStatus === "UNVERIFIED") {
+    const { data: verdicts, error } = await supabase
+      .from("verdicts")
+      .select("news_id, verdict, confidence, reasoning, sources_used");
+
+    if (error) {
+      console.warn("Failed to prefetch verdicts:", error.message);
+      return { filter: null, verdictMap: null };
+    }
+
+    const verdictMap = new Map();
+    const ids = [];
+    (verdicts || []).forEach((v) => {
+      verdictMap.set(Number(v.news_id), v);
+      ids.push(Number(v.news_id));
+    });
+
+    return { filter: { mode: "exclude", ids }, verdictMap };
+  }
+
+  // Specific status — may map to multiple DB values (e.g. VERIFIED → VERIFIED | TRUE)
+  const aliases = VERDICT_ALIASES[upperStatus] || [upperStatus];
+
+  let q = supabase
+    .from("verdicts")
+    .select("news_id, verdict, confidence, reasoning, sources_used");
+
+  if (aliases.length === 1) {
+    q = q.eq("verdict", aliases[0]);
+  } else {
+    q = q.in("verdict", aliases);
+  }
+
+  const { data: verdicts, error } = await q;
+
+  if (error) {
+    console.warn("Failed to prefetch verdicts:", error.message);
+    return { filter: null, verdictMap: null };
+  }
+
+  const verdictMap = new Map();
+  const ids = [];
+  (verdicts || []).forEach((v) => {
+    verdictMap.set(Number(v.news_id), v);
+    ids.push(Number(v.news_id));
+  });
+
+  return { filter: { mode: "include", ids }, verdictMap };
+}
+
+/**
  * Fetch paginated news items with related data.
- * Supports filtering by verification_status and category.
+ * Supports filtering by verification_status (via verdicts table) and category.
  */
 export async function fetchNewsItems({
   page = 1,
@@ -104,7 +127,7 @@ export async function fetchNewsItems({
   verificationStatus,
   categorySlug,
 } = {}) {
-  // Targeted verdict fetch — only queries when a specific filter is active
+  // Pre-fetch verdict IDs for filtering (PRD §9.4)
   const { filter: verdictFilter, verdictMap } =
     await prefetchVerdicts(verificationStatus);
 
@@ -120,8 +143,7 @@ export async function fetchNewsItems({
       `
       id, title, content, verification_status, credibility_score,
       ingested_at, published_at,
-      ${newsCategories},
-      evidence_items!evidence_items_news_id_fkey (id, url, title, snippet, source_type)
+      ${newsCategories}
     `,
       { count: "exact" },
     )
@@ -131,11 +153,10 @@ export async function fetchNewsItems({
     query = query.eq("news_categories.categories.slug", categorySlug);
   }
 
-  // Apply server-side verdict filter
+  // Apply verdict-based filter
   if (verdictFilter) {
     if (verdictFilter.mode === "include") {
       if (verdictFilter.ids.length === 0) {
-        // No matching verdicts → return empty immediately
         return { data: [], count: 0, page, pageSize };
       }
       query = query.in("id", verdictFilter.ids);
@@ -143,7 +164,6 @@ export async function fetchNewsItems({
       verdictFilter.mode === "exclude" &&
       verdictFilter.ids.length > 0
     ) {
-      // UNVERIFIED: exclude items that have verdicts
       query = query.not("id", "in", `(${verdictFilter.ids.join(",")})`);
     }
   }
@@ -154,10 +174,24 @@ export async function fetchNewsItems({
   const { data, error, count } = await query;
   if (error) throw error;
 
-  // Attach verdict data — reuse the already-fetched verdictMap (no extra query)
+  // Attach verdict details — reuse the already-fetched verdictMap when available
   const merged = await attachVerdicts(data, verdictMap);
 
   return { data: merged, count, page, pageSize };
+}
+
+/**
+ * Fetch evidence items for a single news item (lazy — called on demand).
+ */
+export async function fetchEvidenceItems(newsItemId) {
+  const { data, error } = await supabase
+    .from("evidence_items")
+    .select("id, url, title, snippet, source_type")
+    .eq("news_id", newsItemId)
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
 }
 
 /**

@@ -51,10 +51,22 @@ export function useAuthListener() {
 
     // 1. Get existing session
     async function init() {
+      // Hard timeout: if getSession() hangs (NavigatorLockManager deadlock),
+      // force-clear stale tokens and dismiss the splash screen after 2 seconds.
+      const lockTimeoutId = setTimeout(() => {
+        if (!mounted) return;
+        console.warn("Auth init timeout – clearing stale session tokens");
+        localStorage.removeItem("sb-trendy-auth-token");
+        sessionStorage.clear();
+        if (mounted) dispatch(clearAuth());
+      }, 2000);
+
       try {
         const {
           data: { session },
         } = await supabase.auth.getSession();
+
+        clearTimeout(lockTimeoutId);
 
         if (session?.user && mounted) {
           const profileData = await ensureUserProfile(session.user).catch(
@@ -82,6 +94,7 @@ export function useAuthListener() {
           dispatch(clearAuth());
         }
       } catch (err) {
+        clearTimeout(lockTimeoutId);
         // Navigator LockManager timeout – clear stale tokens and reset
         if (
           err?.message?.includes("LockManager") ||
@@ -172,14 +185,9 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: signIn,
-    onSuccess: async (data) => {
-      if (data.user) {
-        const profileData = await ensureUserProfile(data.user).catch(
-          () => null,
-        );
-        dispatch(setUser({ user: data.user, profile: profileData }));
-      }
-    },
+    // Don't set user state here – the onAuthStateChange listener will handle
+    // it when the SIGNED_IN event fires. This prevents duplicate profile fetches
+    // and avoids the mutation hanging if ensureUserProfile has issues.
   });
 
   const signupMutation = useMutation({
@@ -204,6 +212,9 @@ export function useAuth() {
   const logoutMutation = useMutation({
     mutationFn: signOut,
     onSuccess: () => {
+      // Clear all storage to prevent stale session issues
+      localStorage.removeItem("sb-trendy-auth-token");
+      sessionStorage.clear();
       dispatch(clearAuth());
     },
   });

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   useQuery,
   useInfiniteQuery,
@@ -24,6 +25,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   searchNews,
+  fetchEvidenceItems,
 } from "../api/newsApi";
 import { selectProfile } from "../store/authSlice";
 
@@ -131,31 +133,72 @@ export function useReactionCounts(newsItemId) {
 }
 
 /**
- * Batch-fetch reaction counts for all visible news items (1 query instead of N).
- * Returns a map: { [newsItemId]: { EXCITED, NEUTRAL, SKEPTICAL, ANGRY } }
+ * Batch-fetch reaction counts for a page of news items.
+ * After fetching, seeds individual ["reactionCounts", id] cache entries so
+ * previously loaded items never re-fetch when the list grows on scroll.
  */
 export function useBatchReactionCounts(newsItemIds = []) {
+  const queryClient = useQueryClient();
   const stableKey = newsItemIds.join(",");
-  return useQuery({
+
+  const query = useQuery({
     queryKey: ["batchReactionCounts", stableKey],
     queryFn: () => fetchBatchReactionCounts(newsItemIds),
     enabled: newsItemIds.length > 0,
     staleTime: 1000 * 30,
   });
+
+  // Seed individual per-item caches so old items read from cache on next scroll
+  useEffect(() => {
+    if (!query.data) return;
+    Object.entries(query.data).forEach(([id, counts]) => {
+      queryClient.setQueryData(["reactionCounts", Number(id)], counts);
+    });
+  }, [query.data, queryClient]);
+
+  return query;
 }
 
 /**
- * Batch-fetch user reactions for all visible news items (1 query instead of N).
- * Returns a map: { [newsItemId]: reactionRow }
+ * Batch-fetch user reactions for a page of news items.
+ * After fetching, seeds individual ["userReaction", id, userId] cache entries.
  */
 export function useBatchUserReactions(newsItemIds = []) {
   const profile = useSelector(selectProfile);
+  const queryClient = useQueryClient();
   const stableKey = newsItemIds.join(",");
-  return useQuery({
+
+  const query = useQuery({
     queryKey: ["batchUserReactions", stableKey, profile?.id],
     queryFn: () => fetchBatchUserReactions(newsItemIds, profile.id),
     enabled: newsItemIds.length > 0 && !!profile?.id,
     staleTime: 1000 * 30,
+  });
+
+  // Seed individual per-item user-reaction caches
+  useEffect(() => {
+    if (!query.data) return;
+    newsItemIds.forEach((id) => {
+      queryClient.setQueryData(
+        ["userReaction", id, profile?.id],
+        query.data[id] ?? null,
+      );
+    });
+  }, [query.data, queryClient, profile?.id]); // newsItemIds omitted intentionally — data change is the trigger
+
+  return query;
+}
+
+/**
+ * Lazy-fetch evidence items for a news card — only fires when `enabled` is true
+ * (i.e. when the user opens the sources dropdown).
+ */
+export function useEvidenceItems(newsItemId, enabled = false) {
+  return useQuery({
+    queryKey: ["evidenceItems", newsItemId],
+    queryFn: () => fetchEvidenceItems(newsItemId),
+    enabled: !!newsItemId && enabled,
+    staleTime: 1000 * 60 * 10, // evidence rarely changes
   });
 }
 
@@ -170,38 +213,37 @@ export function useUserReaction(newsItemId) {
 
 export function useReactToNews() {
   const queryClient = useQueryClient();
+  const profile = useSelector(selectProfile);
 
   return useMutation({
     mutationFn: upsertReaction,
     onSuccess: (_data, variables) => {
+      // Invalidate only the specific item's individual caches — not the whole
+      // batch — so other visible cards are unaffected.
       queryClient.invalidateQueries({
         queryKey: ["reactionCounts", variables.newsItemId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["userReaction", variables.newsItemId],
+        queryKey: ["userReaction", variables.newsItemId, profile?.id],
       });
-      // Also invalidate batch caches
-      queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
-      queryClient.invalidateQueries({ queryKey: ["batchUserReactions"] });
     },
   });
 }
 
 export function useRemoveReaction() {
   const queryClient = useQueryClient();
+  const profile = useSelector(selectProfile);
 
   return useMutation({
     mutationFn: removeReaction,
     onSuccess: (_data, variables) => {
+      // Invalidate only the specific item's individual caches.
       queryClient.invalidateQueries({
         queryKey: ["reactionCounts", variables.newsItemId],
       });
       queryClient.invalidateQueries({
-        queryKey: ["userReaction", variables.newsItemId],
+        queryKey: ["userReaction", variables.newsItemId, profile?.id],
       });
-      // Also invalidate batch caches
-      queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
-      queryClient.invalidateQueries({ queryKey: ["batchUserReactions"] });
     },
   });
 }

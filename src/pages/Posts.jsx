@@ -386,7 +386,7 @@ export default function Posts() {
                             </p>
                           )}
                           {ev.snippet && (
-                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                            <p className="text-xs text-gray-500 leading-relaxed">
                               {ev.snippet}
                             </p>
                           )}

@@ -1,20 +1,20 @@
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { Link, useLocation, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import AuthLayout from "../UI/AuthLayout";
 import FormInput from "../UI/FormInput";
 import Button from "../UI/Button";
 import { useAuth } from "../hooks/useAuth";
-import { setDemoMode } from "../store/authSlice";
+import { setDemoMode, selectIsDemoMode } from "../store/authSlice";
 
 export default function Login() {
   const [errorMsg, setErrorMsg] = useState("");
-  const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const { login, loginLoading, isAuthenticated } = useAuth();
+  const isDemoMode = useSelector(selectIsDemoMode);
   const from = location.state?.from?.pathname || "/feed";
 
   const {
@@ -28,8 +28,8 @@ export default function Login() {
     },
   });
 
-  // If already authenticated, redirect (must be after all hooks)
-  if (isAuthenticated) {
+  // If already authenticated or in demo mode, redirect (must be after all hooks)
+  if (isAuthenticated || isDemoMode) {
     return <Navigate to={from} replace />;
   }
 
@@ -37,7 +37,8 @@ export default function Login() {
     setErrorMsg("");
     try {
       await login({ email: data.email, password: data.password });
-      navigate(from, { replace: true });
+      // Don't manually navigate – the component will auto-redirect when
+      // isAuthenticated becomes true (handled by onAuthStateChange listener)
     } catch (err) {
       const msg = err?.message || "";
       if (msg === "Invalid login credentials") {
@@ -55,7 +56,7 @@ export default function Login() {
   function handleDemoLogin() {
     setErrorMsg("");
     dispatch(setDemoMode(true));
-    navigate("/feed", { replace: true });
+    // Navigation handled by isAuthenticated/isDemoMode check above
   }
 
   return (

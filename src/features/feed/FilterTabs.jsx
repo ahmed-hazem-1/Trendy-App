@@ -2,10 +2,10 @@ import { AlertTriangle, XCircle, CheckCircle, ShieldAlert } from "lucide-react";
 
 const FILTERS = [
   { key: "ALL", label: "الكل", icon: null },
-  { key: "TRUE", label: "متحقق", icon: CheckCircle },
+  { key: "VERIFIED", label: "متحقق", icon: CheckCircle },
   { key: "UNVERIFIED", label: "غير متحقق", icon: AlertTriangle },
   { key: "MISLEADING", label: "مضلل", icon: ShieldAlert },
-  { key: "FALSE", label: "مزيف", icon: XCircle },
+  { key: "FAKE", label: "مزيف", icon: XCircle },
 ];
 
 export default function FilterTabs({ active = "ALL", onChange }) {

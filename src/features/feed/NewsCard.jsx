@@ -20,6 +20,7 @@ import {
   useUserReaction,
   useReactToNews,
   useRemoveReaction,
+  useEvidenceItems,
 } from "../../hooks/useNews";
 import { selectProfile, selectIsDemoMode } from "../../store/authSlice";
 
@@ -52,6 +53,10 @@ function NewsCard({
   const [insightOpen, setInsightOpen] = useState(true);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+
+  // Evidence is fetched lazily — only when the sources dropdown is first opened
+  const { data: evidence = [], isFetching: evidenceFetching } =
+    useEvidenceItems(item.id, sourcesOpen);
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
@@ -176,9 +181,11 @@ function NewsCard({
 
                 {sourcesOpen && (
                   <div className="mt-3 space-y-2">
-                    {/* Evidence items */}
-                    {item.evidence?.length > 0 ? (
-                      item.evidence.map((ev) => (
+                    {/* Evidence items — lazily loaded */}
+                    {evidenceFetching ? (
+                      <p className="text-xs text-gray-400 text-center py-2">جارٍ تحميل المصادر…</p>
+                    ) : evidence?.length > 0 ? (
+                      evidence.map((ev) => (
                         <div
                           key={ev.id}
                           className="rounded-lg border border-gray-100 bg-gray-50 p-3"
@@ -191,7 +198,7 @@ function NewsCard({
                                 </p>
                               )}
                               {ev.snippet && (
-                                <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">
+                                <p className="text-[11px] text-gray-500 leading-relaxed">
                                   {ev.snippet}
                                 </p>
                               )}

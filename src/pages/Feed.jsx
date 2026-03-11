@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import {
   useOutletContext,
   useSearchParams,
@@ -36,7 +36,6 @@ function mapNewsItem(item) {
     credibility_score: verdict?.confidence ?? item.credibility_score ?? 0,
     reasoning: verdict?.reasoning || null,
     sources_used: verdict?.sources_used || null,
-    evidence: item.evidence_items || [],
     timeAgo: formatTimeAgo(item.ingested_at || item.published_at),
     category,
     likes: 0,
@@ -105,14 +104,30 @@ export default function Feed() {
   const { data: trendingItems = [] } = useTrendingNews(5);
 
   // Flatten all pages into a single list
-  const newsItems = (newsData?.pages || [])
-    .flatMap((page) => page.data || [])
-    .map(mapNewsItem);
+  const newsItems = useMemo(
+    () =>
+      (newsData?.pages || [])
+        .flatMap((page) => page.data || [])
+        .map(mapNewsItem),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [newsData], // newsData reference is replaced by React Query whenever pages change
+  );
 
-  // Batch-fetch reaction data for all visible items (1 query instead of N per card)
-  const newsItemIds = newsItems.map((item) => item.id);
-  const { data: batchReactionCounts } = useBatchReactionCounts(newsItemIds);
-  const { data: batchUserReactions } = useBatchUserReactions(newsItemIds);
+  // IDs of all visible items — kept for the sentinel re-check useEffect dep
+  const newsItemCount = newsItems.length;
+
+  // Only batch-fetch reactions for the most recently loaded page.
+  // The batch hooks seed individual per-item caches after each fetch, so
+  // previously loaded items read from cache with zero extra network requests.
+  const lastPageIds = useMemo(() => {
+    const pages = newsData?.pages;
+    if (!pages?.length) return [];
+    const lastPage = pages[pages.length - 1];
+    return (lastPage?.data || []).map((item) => item.id);
+  }, [newsData]); // newsData ref is replaced on every page addition
+
+  const { data: batchReactionCounts } = useBatchReactionCounts(lastPageIds);
+  const { data: batchUserReactions } = useBatchUserReactions(lastPageIds);
 
   // ── Infinite-scroll observer ──
   // Store latest fetch-more logic in a ref so the observer callback never
@@ -171,8 +186,8 @@ export default function Feed() {
     isFetchingNextPage,
     isPlaceholderData,
     fetchNextPage,
-    // newsItems.length changes after each page loads, triggering a re-check
-    newsItems.length,
+    // newsItemCount changes after each page loads, triggering a re-check
+    newsItemCount,
   ]);
   const trendingMapped = trendingItems.map((t) => {
     const verdict = Array.isArray(t.verdicts)
