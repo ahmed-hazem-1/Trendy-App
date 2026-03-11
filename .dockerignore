@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output (rebuilt inside Docker)
+dist/
+dist-ssr/
+
+# Local environment files — NEVER bake secrets into the image.
+# Pass VITE_* vars as --build-arg at docker build time instead.
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test / docs
+*.md
+coverage/
+
+# Netlify-only config (not needed in Cloud Run)
+public/_redirects

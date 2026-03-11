@@ -98,6 +98,90 @@ npm run lint
 | `/profile/:id` | User profile page           |
 | `/posts/:id`   | Individual post detail page |
 
+---
+
+## Deploying to Google Cloud Run
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) installed locally
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`) installed and authenticated
+- A Google Cloud project with **Cloud Run**, **Cloud Build**, and **Container Registry** APIs enabled
+
+### Environment Variables
+
+> **Important:** Vite bakes `VITE_*` variables into the JS bundle **at build time**. They must be passed as Docker `--build-arg` values — they are **not** runtime secrets and should not contain highly sensitive data (only the Supabase anon key, which is already public-facing).
+
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon (publishable) key |
+
+---
+
+### Option A — Manual deploy (one command)
+
+```bash
+# 1. Authenticate Docker with Google Container Registry
+gcloud auth configure-docker
+
+# 2. Build the image with Vite env vars baked in
+docker build \
+  --build-arg VITE_SUPABASE_URL="https://xxxx.supabase.co" \
+  --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGc..." \
+  -t gcr.io/YOUR_PROJECT_ID/trendy-app:latest \
+  .
+
+# 3. Push to Container Registry
+docker push gcr.io/YOUR_PROJECT_ID/trendy-app:latest
+
+# 4. Deploy to Cloud Run
+gcloud run deploy trendy-app \
+  --image gcr.io/YOUR_PROJECT_ID/trendy-app:latest \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --port 8080 \
+  --memory 256Mi \
+  --cpu 1
+```
+
+Replace `YOUR_PROJECT_ID` with your GCP project ID.
+
+---
+
+### Option B — Automated CI/CD via Cloud Build
+
+The repo includes `cloudbuild.yaml`. Connect it to a Cloud Build trigger on the `main` branch:
+
+1. Open **Cloud Build → Triggers → Create Trigger**
+2. Connect your GitHub repo and point it to `cloudbuild.yaml`
+3. Add the following **substitution variables** in the trigger config:
+
+| Variable | Example value |
+|---|---|
+| `_VITE_SUPABASE_URL` | `https://xxxx.supabase.co` |
+| `_VITE_SUPABASE_PUBLISHABLE_KEY` | `eyJhbGc...` |
+| `_REGION` | `us-central1` |
+| `_SERVICE` | `trendy-app` |
+
+Every push to `main` will automatically build, push, and deploy the container.
+
+---
+
+### Local Docker test (optional)
+
+```bash
+docker build \
+  --build-arg VITE_SUPABASE_URL="https://xxxx.supabase.co" \
+  --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGc..." \
+  -t trendy-app .
+
+docker run -p 8080:8080 -e PORT=8080 trendy-app
+# App is now available at http://localhost:8080
+```
+
+---
+
 ## License
 
 This project is proprietary. All rights reserved.
