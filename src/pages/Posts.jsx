@@ -368,14 +368,14 @@ export default function Posts() {
             )}
 
             {/* ── Evidence / sources ── */}
-            {post.evidence.length > 0 && (
+            {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length > 0 && (
               <div className="px-4 sm:px-8 pb-6">
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-teal-500" />
-                  مصادر التحقق ({post.evidence.length})
+                  مصادر التحقق ({post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length})
                 </h3>
                 <div className="space-y-3">
-                  {post.evidence.map((ev) => (
+                  {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).map((ev) => (
                     <div
                       key={ev.id}
                       className="rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4"

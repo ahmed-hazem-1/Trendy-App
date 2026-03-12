@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabaseClient";
 import {
   signIn,
@@ -90,6 +90,11 @@ export function useAuthListener() {
           }
 
           dispatch(setUser({ user: session.user, profile: profileData }));
+          
+          // Invalidate queries on initial session bootstrap
+          if (window._reactQueryClient) {
+            window._reactQueryClient.invalidateQueries();
+          }
         } else if (mounted) {
           dispatch(clearAuth());
         }
@@ -141,8 +146,18 @@ export function useAuthListener() {
           }
 
           dispatch(setUser({ user: session.user, profile: profileData }));
+          
+          // Invalidate all queries to refresh data with new session
+          if (window._reactQueryClient) {
+            window._reactQueryClient.invalidateQueries();
+          }
         } else if (event === "SIGNED_OUT") {
           dispatch(clearAuth());
+          
+          // Clear all cached queries on logout
+          if (window._reactQueryClient) {
+            window._reactQueryClient.clear();
+          }
         } else if (event === "TOKEN_REFRESHED" && session?.user) {
           // Use the ref so we always have the latest profile, not a stale closure
           dispatch(
@@ -175,19 +190,30 @@ let _signupInProgressRef = { current: false };
  */
 export function useAuth() {
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const user = useSelector(selectUser);
   const profile = useSelector(selectProfile);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const isLoading = useSelector(selectIsAuthLoading);
   const role = useSelector(selectUserRole);
 
+  // Make queryClient available globally for auth listener
+  useEffect(() => {
+    window._reactQueryClient = queryClient;
+  }, [queryClient]);
+
   // ── Mutations ──
 
   const loginMutation = useMutation({
-    mutationFn: signIn,
-    // Don't set user state here – the onAuthStateChange listener will handle
-    // it when the SIGNED_IN event fires. This prevents duplicate profile fetches
-    // and avoids the mutation hanging if ensureUserProfile has issues.
+    mutationFn: async (args) => {
+      const result = await signIn(args);
+      
+      // Small delay to ensure session propagates before UI updates
+      // The onAuthStateChange listener handles Redux state updates
+      await new Promise(resolve => setTimeout(resolve, 250));
+      
+      return result;
+    },
   });
 
   const signupMutation = useMutation({

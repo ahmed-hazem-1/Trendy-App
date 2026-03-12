@@ -19,13 +19,32 @@ const api = axios.create({
 // Request interceptor – attach bearer token from current session
 api.interceptors.request.use(
   async (config) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    let session = null;
+    let attempts = 0;
+    const maxAttempts = 5;
+    
+    // Retry getting session with small delays to handle race conditions
+    while (attempts < maxAttempts && !session) {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      
+      if (currentSession?.access_token) {
+        session = currentSession;
+        break;
+      }
+      
+      attempts++;
+      if (attempts < maxAttempts) {
+        // Small delay before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 50 * attempts));
+      }
+    }
 
     if (session?.access_token) {
       config.headers.Authorization = `Bearer ${session.access_token}`;
     }
+    
     return config;
   },
   (error) => Promise.reject(error),
