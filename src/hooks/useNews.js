@@ -82,6 +82,8 @@ export function useNewsItems({
     },
     staleTime: isSearching ? 1000 * 60 : 1000 * 60 * 2,
     placeholderData: keepPreviousData,
+    retry: 3, // Retry up to 3 times on failure
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 

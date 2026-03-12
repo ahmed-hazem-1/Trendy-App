@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useAuth } from "../hooks/useAuth";
+import { selectIsPremium } from "../store/authSlice";
 
 export default function UserMenu() {
   const { profile, isAuthenticated } = useAuth();
+  const isPremium = useSelector(selectIsPremium);
 
   const name = profile?.full_name || profile?.display_name || "مستخدم";
   const avatar = profile?.avatar_url || "/logo/Trendy-logo-no-text.png";
-  const plan = "حساب مجاني";
+  const plan = isPremium ? "Trendy Premium" : "حساب مجاني";
   const profileLink = profile?.id ? `/profile/${profile.id}` : "/login";
 
   if (!isAuthenticated) {

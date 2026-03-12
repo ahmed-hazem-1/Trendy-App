@@ -98,6 +98,7 @@ export default function Feed() {
     isFetching: newsFetching,
     isFetchingNextPage,
     isError: newsError,
+    error: newsErrorObj,
     isPlaceholderData,
     hasNextPage,
     fetchNextPage,
@@ -252,10 +253,17 @@ export default function Feed() {
               <Loader className="h-6 w-6 animate-spin text-teal-500" />
             </div>
           ) : newsError ? (
-            <div className="text-center py-20">
-              <p className="text-sm text-red-500">
-                حدث خطأ أثناء تحميل الأخبار
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="font-semibold text-red-700">حدث خطأ أثناء تحميل الأخبار</p>
+              <p className="mt-2 text-sm text-red-600">
+                {newsErrorObj?.message || "Unknown error"}
               </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-3 rounded bg-red-600 px-3 py-1 text-white text-sm hover:bg-red-700"
+              >
+                إعادة تحميل
+              </button>
             </div>
           ) : newsItems.length === 0 ? (
             <div className="text-center py-20">

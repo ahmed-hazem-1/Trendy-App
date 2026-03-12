@@ -218,3 +218,103 @@ export async function updateUserProfile(userId, updates) {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Upgrade user to premium plan (starts trial if no active subscription).
+ * Finds premium plan in DB and creates/updates user_subscriptions entry.
+ * If plan doesn't exist, creates it automatically.
+ */
+export async function upgradeToPremium(userId) {
+  // 1. Get premium plan or create if doesn't exist
+  let { data: premiumPlan, error: planError } = await supabase
+    .from("subscription_plans")
+    .select("*")
+    .eq("slug", "premium")
+    .maybeSingle();
+
+  if (planError) throw planError;
+
+  // If premium plan doesn't exist, create it
+  if (!premiumPlan) {
+    const { data: newPlan, error: createError } = await supabase
+      .from("subscription_plans")
+      .insert({
+        name: "Trendy Premium",
+        slug: "premium",
+        description: "الاشتراك البريميوم - بدون إعلانات وميزات متقدمة",
+        is_active: true,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.warn("Could not create premium plan:", createError);
+      throw new Error("Failed to initialize premium plan");
+    }
+    premiumPlan = newPlan;
+  }
+
+  // 2. Check for existing subscription
+  const { data: existing } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("plan_id", premiumPlan.id)
+    .maybeSingle();
+
+  // 3. Create or update subscription with TRIAL status
+  const now = new Date().toISOString();
+  const trialEndsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+
+  if (existing) {
+    // Reactivate: extend trial or keep active
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .update({
+        status: "TRIAL",
+        trial_ends_at: trialEndsAt,
+        cancelled_at: null,
+        updated_at: now,
+      })
+      .eq("id", existing.id)
+      .select(
+        `
+        *,
+        subscription_plans (*)
+      `,
+      )
+      .single();
+
+    if (error) throw error;
+    return data;
+  } else {
+    // Create new subscription
+    const { data, error } = await supabase
+      .from("user_subscriptions")
+      .insert({
+        user_id: userId,
+        plan_id: premiumPlan.id,
+        status: "TRIAL",
+        started_at: now,
+        trial_ends_at: trialEndsAt,
+      })
+      .select(
+        `
+        *,
+        subscription_plans (*)
+      `,
+      )
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+}
+
+/**
+ * Refresh user profile with fresh subscription data.
+ * Call after upgrading to get updated isPremium state.
+ */
+export async function refreshUserWithSubscriptions(userId, email) {
+  return getUserProfile(userId, email);
+}

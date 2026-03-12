@@ -58,23 +58,80 @@ const VERDICT_ALIASES = {
  *   news_ids → mode "include" (only show those items).
  * - UNVERIFIED: fetch ALL verdict news_ids → mode "exclude" (show items
  *   that have no verdict).
- * - ALL / falsy: no filtering needed.
+ */
+// ─────────────────────────────────────────────
+// Verdict Cache — prevents duplicate queries
+// ─────────────────────────────────────────────
+const verdictCache = new Map();
+
+/**
+ * Preload and cache verdicts for a specific verification status.
+ * Results are cached for 5 minutes to avoid redundant queries.
+ * If cache is stale or missing, fetches fresh data with retries.
  */
 async function prefetchVerdicts(verificationStatus) {
   if (!verificationStatus || verificationStatus === "ALL") {
     return { filter: null, verdictMap: null };
   }
 
+  // Check if we have cached verdicts (less than 5 minutes old)
+  const cached = verdictCache.get(verificationStatus);
+  if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+    console.log(`[prefetchVerdicts] Using cached verdicts for ${verificationStatus}`);
+    return cached.data;
+  }
+
+  // Fetch verdicts with retry logic
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      console.log(`[prefetchVerdicts] Fetching ${verificationStatus} (attempt ${attempt + 1}/3)`);
+      const result = await _fetchVerdictsWithRetry(verificationStatus);
+      // Cache the result
+      verdictCache.set(verificationStatus, {
+        data: result,
+        timestamp: Date.now(),
+      });
+      console.log(`[prefetchVerdicts] Successfully cached ${verificationStatus}:`, result);
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.error(`[prefetchVerdicts] Attempt ${attempt + 1} failed:`, err);
+      if (attempt < 2) {
+        // Exponential backoff before retry
+        const delay = Math.min(100 * Math.pow(2, attempt), 1000);
+        console.log(`[prefetchVerdicts] Retrying after ${delay}ms...`);
+        await new Promise((resolve) =>
+          setTimeout(resolve, delay),
+        );
+      }
+    }
+  }
+
+  console.error(
+    `[prefetchVerdicts] Failed after 3 retries for ${verificationStatus}:`,
+    lastError?.message,
+    lastError?.code,
+    lastError?.details,
+  );
+  return { filter: null, verdictMap: null };
+}
+
+/**
+ * Internal helper to fetch verdicts (single attempt, no retry).
+ */
+async function _fetchVerdictsWithRetry(verificationStatus) {
   const upperStatus = verificationStatus.toUpperCase();
 
   if (upperStatus === "UNVERIFIED") {
+    console.log("[_fetchVerdictsWithRetry] Querying all verdicts for UNVERIFIED filter");
     const { data: verdicts, error } = await supabase
       .from("verdicts")
       .select("news_id, verdict, confidence, reasoning, sources_used");
 
     if (error) {
-      console.warn("Failed to prefetch verdicts:", error.message);
-      return { filter: null, verdictMap: null };
+      console.error("[_fetchVerdictsWithRetry] Error querying verdicts:", error);
+      throw error;
     }
 
     const verdictMap = new Map();
@@ -84,11 +141,13 @@ async function prefetchVerdicts(verificationStatus) {
       ids.push(Number(v.news_id));
     });
 
+    console.log(`[_fetchVerdictsWithRetry] Found ${ids.length} verdicted items for UNVERIFIED`);
     return { filter: { mode: "exclude", ids }, verdictMap };
   }
 
   // Specific status — may map to multiple DB values (e.g. VERIFIED → VERIFIED | TRUE)
   const aliases = VERDICT_ALIASES[upperStatus] || [upperStatus];
+  console.log(`[_fetchVerdictsWithRetry] Querying ${upperStatus} with aliases:`, aliases);
 
   let q = supabase
     .from("verdicts")
@@ -103,8 +162,8 @@ async function prefetchVerdicts(verificationStatus) {
   const { data: verdicts, error } = await q;
 
   if (error) {
-    console.warn("Failed to prefetch verdicts:", error.message);
-    return { filter: null, verdictMap: null };
+    console.error(`[_fetchVerdictsWithRetry] Error querying ${upperStatus}:`, error);
+    throw error;
   }
 
   const verdictMap = new Map();
@@ -114,6 +173,7 @@ async function prefetchVerdicts(verificationStatus) {
     ids.push(Number(v.news_id));
   });
 
+  console.log(`[_fetchVerdictsWithRetry] Found ${ids.length} verdicts for ${upperStatus}`);
   return { filter: { mode: "include", ids }, verdictMap };
 }
 
@@ -127,57 +187,65 @@ export async function fetchNewsItems({
   verificationStatus,
   categorySlug,
 } = {}) {
-  // Pre-fetch verdict IDs for filtering (PRD §9.4)
-  const { filter: verdictFilter, verdictMap } =
-    await prefetchVerdicts(verificationStatus);
+  try {
+    // Pre-fetch verdict IDs for filtering (PRD §9.4)
+    const { filter: verdictFilter, verdictMap } =
+      await prefetchVerdicts(verificationStatus);
 
-  // When filtering by category, use !inner joins so rows without that category are excluded
-  const hasCategoryFilter = categorySlug && categorySlug !== "all";
-  const newsCategories = hasCategoryFilter
-    ? "news_categories!inner ( *, categories!inner (*) )"
-    : "news_categories ( *, categories (*) )";
+    // When filtering by category, use !inner joins so rows without that category are excluded
+    const hasCategoryFilter = categorySlug && categorySlug !== "all";
+    const newsCategories = hasCategoryFilter
+      ? "news_categories!inner ( *, categories!inner (*) )"
+      : "news_categories ( *, categories (*) )";
 
-  let query = supabase
-    .from("news_items")
-    .select(
-      `
-      id, title, content, verification_status, credibility_score,
-      ingested_at, published_at,
-      ${newsCategories}
-    `,
-      { count: "exact" },
-    )
-    .order("ingested_at", { ascending: false });
+    let query = supabase
+      .from("news_items")
+      .select(
+        `
+        id, title, content, verification_status, credibility_score,
+        ingested_at, published_at,
+        ${newsCategories}
+      `,
+        { count: "exact" },
+      )
+      .order("ingested_at", { ascending: false });
 
-  if (hasCategoryFilter) {
-    query = query.eq("news_categories.categories.slug", categorySlug);
-  }
-
-  // Apply verdict-based filter
-  if (verdictFilter) {
-    if (verdictFilter.mode === "include") {
-      if (verdictFilter.ids.length === 0) {
-        return { data: [], count: 0, page, pageSize };
-      }
-      query = query.in("id", verdictFilter.ids);
-    } else if (
-      verdictFilter.mode === "exclude" &&
-      verdictFilter.ids.length > 0
-    ) {
-      query = query.not("id", "in", `(${verdictFilter.ids.join(",")})`);
+    if (hasCategoryFilter) {
+      query = query.eq("news_categories.categories.slug", categorySlug);
     }
+
+    // Apply verdict-based filter
+    if (verdictFilter) {
+      if (verdictFilter.mode === "include") {
+        if (verdictFilter.ids.length === 0) {
+          return { data: [], count: 0, page, pageSize };
+        }
+        query = query.in("id", verdictFilter.ids);
+      } else if (
+        verdictFilter.mode === "exclude" &&
+        verdictFilter.ids.length > 0
+      ) {
+        query = query.not("id", "in", `(${verdictFilter.ids.join(",")})`);
+      }
+    }
+
+    // Apply pagination after all filters
+    query = query.range((page - 1) * pageSize, page * pageSize - 1);
+
+    const { data, error, count } = await query;
+    if (error) {
+      console.error("Failed to fetch news items:", error);
+      throw error;
+    }
+
+    // Attach verdict details — reuse the already-fetched verdictMap when available
+    const merged = await attachVerdicts(data, verdictMap);
+
+    return { data: merged, count, page, pageSize };
+  } catch (err) {
+    console.error("fetchNewsItems error:", err);
+    throw err; // Re-throw so React Query catches it
   }
-
-  // Apply pagination after all filters
-  query = query.range((page - 1) * pageSize, page * pageSize - 1);
-
-  const { data, error, count } = await query;
-  if (error) throw error;
-
-  // Attach verdict details — reuse the already-fetched verdictMap when available
-  const merged = await attachVerdicts(data, verdictMap);
-
-  return { data: merged, count, page, pageSize };
 }
 
 /**

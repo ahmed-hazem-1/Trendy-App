@@ -1,5 +1,6 @@
 import { Bookmark, Trash2, ExternalLink, Loader } from "lucide-react";
 import { Link, useOutletContext } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useUserBookmarks, useToggleBookmark } from "../hooks/useNews";
 import { useAuth } from "../hooks/useAuth";
 import StatusBadge from "../features/feed/StatusBadge";
@@ -8,10 +9,12 @@ import BottomSheet from "../UI/BottomSheet";
 import { useState } from "react";
 import { AdCard, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
+import { selectIsPremium } from "../store/authSlice";
 
 export default function Saved() {
   const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
   const { profile } = useAuth();
+  const isPremium = useSelector(selectIsPremium);
   const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
   const toggleBookmarkMutation = useToggleBookmark();
   const [activeCategory, setActiveCategory] = useState("all");
@@ -38,11 +41,13 @@ export default function Saved() {
       />
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
         {/* Right ads sidebar */}
-        <aside className="hidden lg:block sticky top-24 self-start space-y-4">
-          {MOCK_ADS.slice(0, 2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-        </aside>
+        {!isPremium && (
+          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
+            {MOCK_ADS.slice(0, 2).map((ad) => (
+              <AdCard key={ad.id} ad={ad} variant="sidebar" />
+            ))}
+          </aside>
+        )}
 
         {/* Main Content */}
         <section className="space-y-4 lg:space-y-5">
@@ -168,11 +173,13 @@ export default function Saved() {
         </section>
 
         {/* Left ads sidebar */}
-        <aside className="hidden xl:block sticky top-24 self-start space-y-4">
-          {MOCK_ADS.slice(2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-        </aside>
+        {!isPremium && (
+          <aside className="hidden xl:block sticky top-24 self-start space-y-4">
+            {MOCK_ADS.slice(2).map((ad) => (
+              <AdCard key={ad.id} ad={ad} variant="sidebar" />
+            ))}
+          </aside>
+        )}
       </div>
       <BottomSheet
         isOpen={bottomSheetOpen}

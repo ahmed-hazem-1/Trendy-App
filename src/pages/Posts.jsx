@@ -18,6 +18,7 @@ import {
   XCircle,
   AlertTriangle,
   HelpCircle,
+  Lock,
 } from "lucide-react";
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
@@ -32,7 +33,7 @@ import {
   useReactToNews,
   useRemoveReaction,
 } from "../hooks/useNews";
-import { selectProfile, selectIsDemoMode } from "../store/authSlice";
+import { selectProfile, selectIsDemoMode, selectIsPremium } from "../store/authSlice";
 
 // ─── helpers ────────────────────────────────
 
@@ -143,6 +144,7 @@ export default function Posts() {
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
+  const isPremium = useSelector(selectIsPremium);
 
   const { data: rawPost, isLoading, isError } = useNewsItem(Number(id));
   const post = rawPost ? mapNewsItem(rawPost) : null;
@@ -224,21 +226,23 @@ export default function Posts() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
         {/* Right ads sidebar */}
-        <aside className="hidden lg:block sticky top-24 self-start space-y-4">
-          {MOCK_ADS.slice(0, 2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-          <div className="xl:hidden space-y-4">
-            <div className="flex items-center gap-2 pt-1">
-              <div className="h-px flex-1 bg-gray-100" />
-              <span className="text-[10px] text-gray-300">المزيد</span>
-              <div className="h-px flex-1 bg-gray-100" />
-            </div>
-            {MOCK_ADS.slice(2).map((ad) => (
+        {!isPremium && (
+          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
+            {MOCK_ADS.slice(0, 2).map((ad) => (
               <AdCard key={ad.id} ad={ad} variant="sidebar" />
             ))}
-          </div>
-        </aside>
+            <div className="xl:hidden space-y-4">
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-px flex-1 bg-gray-100" />
+                <span className="text-[10px] text-gray-300">المزيد</span>
+                <div className="h-px flex-1 bg-gray-100" />
+              </div>
+              {MOCK_ADS.slice(2).map((ad) => (
+                <AdCard key={ad.id} ad={ad} variant="sidebar" />
+              ))}
+            </div>
+          </aside>
+        )}
 
         {/* Main article content */}
         <section className="min-w-0">
@@ -368,52 +372,72 @@ export default function Posts() {
             )}
 
             {/* ── Evidence / sources ── */}
-            {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length > 0 && (
+            {!isPremium ? (
               <div className="px-4 sm:px-8 pb-6">
-                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-teal-500" />
-                  مصادر التحقق ({post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length})
-                </h3>
-                <div className="space-y-3">
-                  {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).map((ev) => (
-                    <div
-                      key={ev.id}
-                      className="rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0 text-right">
-                          {ev.title && (
-                            <p className="text-sm font-semibold text-gray-800 mb-1 truncate">
-                              {ev.title}
-                            </p>
-                          )}
-                          {ev.snippet && (
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                              {ev.snippet}
-                            </p>
-                          )}
-                          {ev.source_type && (
-                            <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">
-                              {ev.source_type}
-                            </span>
-                          )}
-                        </div>
-                        {ev.url && (
-                          <a
-                            href={ev.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-teal-500 hover:text-teal-700 transition"
-                            title="فتح المصدر"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-xl border-2 border-dashed border-amber-200 bg-amber-50 p-6 text-center">
+                  <Lock className="h-10 w-10 text-amber-600 mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-amber-900 mb-2">
+                    المصادر والأدلة متاحة للمشتركين فقط
+                  </h3>
+                  <p className="text-sm text-amber-800 mb-4">
+                    ترقّ إلى البريميوم للوصول إلى جميع المصادر والأدلة والتحليلات المتقدمة.
+                  </p>
+                  <Link
+                    to="/feed"
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
+                  >
+                    ترقية إلى البريميوم
+                  </Link>
                 </div>
               </div>
+            ) : (
+              post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length > 0 && (
+                <div className="px-4 sm:px-8 pb-6">
+                  <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-teal-500" />
+                    مصادر التحقق ({post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length})
+                  </h3>
+                  <div className="space-y-3">
+                    {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).map((ev) => (
+                      <div
+                        key={ev.id}
+                        className="rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0 text-right">
+                            {ev.title && (
+                              <p className="text-sm font-semibold text-gray-800 mb-1 truncate">
+                                {ev.title}
+                              </p>
+                            )}
+                            {ev.snippet && (
+                              <p className="text-xs text-gray-500 leading-relaxed">
+                                {ev.snippet}
+                              </p>
+                            )}
+                            {ev.source_type && (
+                              <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">
+                                {ev.source_type}
+                              </span>
+                            )}
+                          </div>
+                          {ev.url && (
+                            <a
+                              href={ev.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 text-teal-500 hover:text-teal-700 transition"
+                              title="فتح المصدر"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
 
             {/* ── Verification log ── */}
@@ -566,11 +590,13 @@ export default function Posts() {
         </section>
 
         {/* Left ads sidebar — xl only */}
-        <aside className="hidden xl:block sticky top-24 self-start space-y-4">
-          {MOCK_ADS.slice(2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-        </aside>
+        {!isPremium && (
+          <aside className="hidden xl:block sticky top-24 self-start space-y-4">
+            {MOCK_ADS.slice(2).map((ad) => (
+              <AdCard key={ad.id} ad={ad} variant="sidebar" />
+            ))}
+          </aside>
+        )}
       </div>
 
       {/* Share modal */}

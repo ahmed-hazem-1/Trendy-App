@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Bookmark,
   BookmarkCheck,
+  Lock,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -25,7 +26,7 @@ import {
   useUserBookmark,
   useToggleBookmark,
 } from "../../hooks/useNews";
-import { selectProfile, selectIsDemoMode } from "../../store/authSlice";
+import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/authSlice";
 
 const REACTION_CONFIG = [
   {
@@ -58,11 +59,13 @@ function NewsCard({
   const [shareOpen, setShareOpen] = useState(false);
 
   // Evidence is fetched lazily — only when the sources dropdown is first opened
-  const { data: evidence = [], isFetching: evidenceFetching } =
-    useEvidenceItems(item.id, sourcesOpen);
-
+  // and ONLY for premium users
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
+  const isPremium = useSelector(selectIsPremium);
+
+  const { data: evidence = [], isFetching: evidenceFetching } =
+    useEvidenceItems(item.id, sourcesOpen && isPremium);
 
   // Use batch data when available; fall back to individual queries (e.g. Posts page)
   const hasBatch = batchCounts !== undefined;
@@ -206,15 +209,24 @@ function NewsCard({
                   onClick={() => setSourcesOpen(!sourcesOpen)}
                   className="w-full flex items-center justify-center gap-1 text-center text-[10px] sm:text-xs font-semibold text-gray-500 hover:text-gray-700 transition cursor-pointer"
                 >
-                  {sourcesOpen ? "إخفاء مصادر التحقق" : "عرض مصادر التحقق"}
-                  {sourcesOpen ? (
-                    <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  {isPremium ? (
+                    <>
+                      {sourcesOpen ? "إخفاء مصادر التحقق" : "عرض مصادر التحقق"}
+                      {sourcesOpen ? (
+                        <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      )}
+                    </>
                   ) : (
-                    <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <>
+                      <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      مزايا البريميوم
+                    </>
                   )}
                 </button>
 
-                {sourcesOpen && (
+                {sourcesOpen && isPremium && (
                   <div className="mt-3 space-y-2">
                     {/* Evidence items — lazily loaded */}
                     {evidenceFetching ? (
@@ -268,6 +280,20 @@ function NewsCard({
                         لا توجد مصادر متاحة حالياً
                       </p>
                     )}
+                  </div>
+                )}
+
+                {!isPremium && sourcesOpen && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
+                    <p className="text-xs text-amber-900 mb-2">
+                      الوصول إلى المصادر والأدلة حصري للمشتركين في البريميوم
+                    </p>
+                    <Link
+                      to="/feed"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:text-amber-800 transition"
+                    >
+                      ترقية إلى البريميوم
+                    </Link>
                   </div>
                 )}
               </>

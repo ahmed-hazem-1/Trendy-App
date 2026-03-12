@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
+import { useSelector } from "react-redux";
 import FormInput from "../UI/FormInput";
 import FormSelect from "../UI/FormSelect";
 import Button from "../UI/Button";
@@ -28,6 +29,7 @@ import { updateUserProfile } from "../api/authApi";
 import { useUserBookmarks, useToggleBookmark } from "../hooks/useNews";
 import StatusBadge from "../features/feed/StatusBadge";
 import { Link } from "react-router-dom";
+import { selectIsPremium } from "../store/authSlice";
 
 const INTEREST_OPTIONS = [
   { key: "technology", label: "تكنولوجيا", emoji: "💻" },
@@ -56,6 +58,7 @@ const FALLBACK_USER = {
 export default function Profile() {
   const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
   const { profile, refreshProfile } = useAuth();
+  const isPremium = useSelector(selectIsPremium);
   const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
   const toggleBookmarkMutation = useToggleBookmark();
   const [activeCategory, setActiveCategory] = useState("all");
@@ -173,23 +176,25 @@ export default function Profile() {
       />
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
         {/* Right ads sidebar — all 4 ads at lg, only first 2 at xl */}
-        <aside className="hidden lg:block sticky top-24 self-start space-y-4">
-          {/* First 2 ads — always visible at lg+ */}
-          {MOCK_ADS.slice(0, 2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-          {/* Last 2 ads — only in this sidebar at lg, hidden at xl (move to left sidebar) */}
-          <div className="xl:hidden space-y-4">
-            <div className="flex items-center gap-2 pt-1">
-              <div className="h-px flex-1 bg-gray-100" />
-              <span className="text-[10px] text-gray-300">المزيد</span>
-              <div className="h-px flex-1 bg-gray-100" />
-            </div>
-            {MOCK_ADS.slice(2).map((ad) => (
+        {!isPremium && (
+          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
+            {/* First 2 ads — always visible at lg+ */}
+            {MOCK_ADS.slice(0, 2).map((ad) => (
               <AdCard key={ad.id} ad={ad} variant="sidebar" />
             ))}
-          </div>
-        </aside>
+            {/* Last 2 ads — only in this sidebar at lg, hidden at xl (move to left sidebar) */}
+            <div className="xl:hidden space-y-4">
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-px flex-1 bg-gray-100" />
+                <span className="text-[10px] text-gray-300">المزيد</span>
+                <div className="h-px flex-1 bg-gray-100" />
+              </div>
+              {MOCK_ADS.slice(2).map((ad) => (
+                <AdCard key={ad.id} ad={ad} variant="sidebar" />
+              ))}
+            </div>
+          </aside>
+        )}
 
         {/* Main profile content */}
         <section className="min-w-0 space-y-5">
@@ -572,11 +577,13 @@ export default function Profile() {
         </section>
 
         {/* Left ads sidebar — visible xl only (last 2 ads) */}
-        <aside className="hidden xl:block sticky top-24 self-start space-y-4">
-          {MOCK_ADS.slice(2).map((ad) => (
-            <AdCard key={ad.id} ad={ad} variant="sidebar" />
-          ))}
-        </aside>
+        {!isPremium && (
+          <aside className="hidden xl:block sticky top-24 self-start space-y-4">
+            {MOCK_ADS.slice(2).map((ad) => (
+              <AdCard key={ad.id} ad={ad} variant="sidebar" />
+            ))}
+          </aside>
+        )}
       </div>
       <BottomSheet
         isOpen={bottomSheetOpen}

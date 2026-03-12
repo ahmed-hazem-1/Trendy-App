@@ -1,10 +1,16 @@
-import { Crown, LogOut } from "lucide-react";
+import { Crown, LogOut, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useAuth } from "../hooks/useAuth";
+import { selectIsPremium } from "../store/authSlice";
+import PremiumModal from "./PremiumModal";
 
 export default function ProfileCard() {
   const { profile, isAuthenticated, logout } = useAuth();
+  const isPremium = useSelector(selectIsPremium);
   const navigate = useNavigate();
+  const [premiumOpen, setPremiumOpen] = useState(false);
 
   const name = profile?.full_name || profile?.display_name || "مستخدم";
   const avatar = profile?.avatar_url || "/logo/Trendy-logo-no-text.png";
@@ -40,11 +46,21 @@ export default function ProfileCard() {
           {name}
         </Link>
 
-        {/* Try Premium */}
-        <button className="mx-auto flex items-center justify-center gap-2 rounded-full bg-linear-to-r from-amber-400 to-orange-400 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition cursor-pointer mb-5">
-          <Crown className="h-4 w-4" />
-          جرب البريميوم
-        </button>
+        {/* Try Premium or Premium Badge */}
+        {isPremium ? (
+          <div className="mx-auto flex items-center justify-center gap-2 rounded-full bg-linear-to-r from-teal-100 to-emerald-100 px-6 py-2.5 text-sm font-semibold text-teal-700 shadow-md mb-5">
+            <CheckCircle className="h-4 w-4" />
+            Trendy Premium
+          </div>
+        ) : (
+          <button
+            onClick={() => setPremiumOpen(true)}
+            className="mx-auto flex items-center justify-center gap-2 rounded-full bg-linear-to-r from-amber-400 to-orange-400 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition cursor-pointer mb-5"
+          >
+            <Crown className="h-4 w-4" />
+            جرب البريميوم
+          </button>
+        )}
 
         {/* Log Out */}
         {isAuthenticated && (
@@ -65,6 +81,7 @@ export default function ProfileCard() {
           </Link>
         )}
       </div>
+      <PremiumModal isOpen={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </div>
   );
 }

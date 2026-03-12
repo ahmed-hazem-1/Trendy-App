@@ -1,11 +1,13 @@
 import { X, LayoutGrid, Crown } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCategories } from "../hooks/useNews";
+import PremiumModal from "./PremiumModal";
 
 const HASH = <span className="text-sm font-semibold">#</span>;
 
 export default function BottomSheet({ isOpen, onClose, activeCategory, onCategoryChange }) {
   const sheetRef = useRef(null);
+  const [premiumOpen, setPremiumOpen] = useState(false);
   const { data: categories = [] } = useCategories();
 
   // Lock body scroll & close on Escape
@@ -34,12 +36,18 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
     onClose();
   }
 
-  if (!isOpen) return null;
+  function handlePremiumClick() {
+    onClose?.();
+    setPremiumOpen(true);
+  }
 
   return (
     <div
-      className="fixed inset-0 z-[60] lg:hidden"
+      className={`fixed inset-0 z-[60] lg:hidden transition-[opacity] duration-300 ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
       onClick={handleBackdropClick}
+      aria-hidden={!isOpen}
     >
       {/* Backdrop */}
       <div
@@ -125,13 +133,17 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
                   تحليلات متقدمة • تحقق أسرع • بدون إعلانات
                 </p>
               </div>
-              <button className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-teal-50 transition cursor-pointer">
+              <button
+                onClick={handlePremiumClick}
+                className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-teal-50 transition cursor-pointer"
+              >
                 جرّب
               </button>
             </div>
           </div>
         </div>
       </div>
+      <PremiumModal isOpen={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </div>
   );
 }

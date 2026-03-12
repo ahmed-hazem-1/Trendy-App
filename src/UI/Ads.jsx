@@ -1,4 +1,6 @@
 import { ExternalLink, Crown } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectIsPremium } from "../store/authSlice";
 import { MOCK_ADS } from "../utils/adsData";
 
 /* ─── Enhanced Ad Card ─── */
@@ -94,6 +96,11 @@ export function AdCard({ ad, variant = "sidebar" }) {
 
 /* ─── Premium Banner Ad (for mobile / tablet) ─── */
 export function PremiumBanner() {
+  const isPremium = useSelector(selectIsPremium);
+
+  // Don't show banner if user is already premium
+  if (isPremium) return null;
+
   return (
     <div className="lg:hidden mb-4 rounded-2xl bg-linear-to-r from-teal-600 to-emerald-500 p-4 text-white shadow-md relative overflow-hidden">
       {/* Decorative circles */}
@@ -120,6 +127,11 @@ export function PremiumBanner() {
 
 /* ─── Mobile / Tablet Ad Strip ─── */
 export function MobileAdStrip() {
+  const isPremium = useSelector(selectIsPremium);
+
+  // Don't show ads if user is premium
+  if (isPremium) return null;
+
   return (
     <div className="lg:hidden mt-6 space-y-4">
       {/* Section divider */}

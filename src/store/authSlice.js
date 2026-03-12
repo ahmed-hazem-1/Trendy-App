@@ -64,4 +64,23 @@ export const selectIsDemoMode = (state) => state.auth.isDemoMode;
 export const selectIsAuthLoading = (state) => state.auth.isLoading;
 export const selectUserRole = (state) => state.auth.profile?.role || "USER";
 
+/**
+ * Derive isPremium from user_subscriptions.
+ * Premium if: has active/trial subscription + plan slug is "premium"
+ * or can_see_ai_analysis feature is enabled.
+ */
+export const selectIsPremium = (state) => {
+  const profile = state.auth.profile;
+  if (!profile) return false;
+
+  // Check if has active/trial subscription with premium plan
+  const activeSubscription = (profile.user_subscriptions || []).find(
+    (sub) =>
+      (sub.status === "ACTIVE" || sub.status === "TRIAL") &&
+      sub.subscription_plans?.slug === "premium",
+  );
+
+  return !!activeSubscription;
+};
+
 export default authSlice.reducer;

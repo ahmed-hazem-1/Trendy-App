@@ -8,6 +8,8 @@ import {
   signOut,
   getUserProfile,
   ensureUserProfile,
+  upgradeToPremium,
+  refreshUserWithSubscriptions,
 } from "../api/authApi";
 import {
   setUser,
@@ -18,6 +20,7 @@ import {
   selectIsAuthenticated,
   selectIsAuthLoading,
   selectUserRole,
+  selectIsPremium,
 } from "../store/authSlice";
 
 // ─────────────────────────────────────────────
@@ -121,7 +124,9 @@ export function useAuthListener() {
       if (!mounted) return;
 
       try {
-        if (event === "SIGNED_IN" && session?.user) {
+        const isInitial = event === "INITIAL_SESSION";
+
+        if ((event === "SIGNED_IN" || isInitial) && session?.user) {
           // Skip if a signup is in progress – the signup handler will take care
           if (signupInProgressRef.current) return;
 
@@ -253,6 +258,23 @@ export function useAuth() {
     if (profileData) dispatch(setProfile(profileData));
   };
 
+  const upgradeMutation = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) throw new Error("No user profile");
+      return upgradeToPremium(profile.id);
+    },
+    onSuccess: async () => {
+      // Refresh profile to update subscription state
+      if (user?.id) {
+        const updated = await refreshUserWithSubscriptions(
+          user.id,
+          user.email,
+        ).catch(() => null);
+        if (updated) dispatch(setProfile(updated));
+      }
+    },
+  });
+
   return {
     // State
     user,
@@ -260,12 +282,14 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     role,
+    isPremium: useSelector(selectIsPremium),
 
     // Actions
     login: loginMutation.mutateAsync,
     signup: signupMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     refreshProfile,
+    upgradeToPremium: upgradeMutation.mutateAsync,
 
     // Mutation states
     loginLoading: loginMutation.isPending,
@@ -273,5 +297,7 @@ export function useAuth() {
     signupLoading: signupMutation.isPending,
     signupError: signupMutation.error,
     logoutLoading: logoutMutation.isPending,
+    upgradeLoading: upgradeMutation.isPending,
+    upgradeError: upgradeMutation.error,
   };
 }
