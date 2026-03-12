@@ -168,12 +168,13 @@ function mapNewsItem(item) {
     credibility_score: verdict?.confidence ?? 0,
   };
 }
+```
 
 ## Key Files Reference
 
-- [PRD.md](PRD.md): Complete product requirements and technical decisions
-- [src/App.jsx](src/App.jsx): Route setup and auth listener
-- [src/lib/supabaseClient.js](src/lib/supabaseClient.js): Database client configuration
-- [src/api/newsApi.js](src/api/newsApi.js): Core data fetching patterns
-- [src/hooks/useAuth.js](src/hooks/useAuth.js): Authentication patterns
-- [src/pages/Feed.jsx](src/pages/Feed.jsx): Main application screen
+- [PRD.md](../PRD.md): Complete product requirements and technical decisions
+- [src/App.jsx](../src/App.jsx): Route setup and auth listener
+- [src/lib/supabaseClient.js](../src/lib/supabaseClient.js): Database client configuration
+- [src/api/newsApi.js](../src/api/newsApi.js): Core data fetching patterns
+- [src/hooks/useAuth.js](../src/hooks/useAuth.js): Authentication patterns
+- [src/pages/Feed.jsx](../src/pages/Feed.jsx): Main application screen
