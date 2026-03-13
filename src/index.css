@@ -65,7 +65,6 @@ body {
 /* Thin scrollbar for dropdowns */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
 }
 .scrollbar-thin::-webkit-scrollbar {
   width: 4px;
@@ -146,8 +145,7 @@ body {
 
 /* Hide scrollbar but keep scroll functionality */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none; /* IE and Edge */
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
@@ -198,5 +196,34 @@ body {
 }
 
 .animate-fade-in-down {
-  animation: fadeInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInDown 0.4s ease-out forwards;
 }
+
+/* Background Mesh Gradient Wave Animation */
+@keyframes wave {
+  0% {
+    transform: rotate(0deg) scale(1);
+    filter: blur(60px);
+  }
+  33% {
+    transform: rotate(120deg) scale(1.2);
+    filter: blur(80px);
+  }
+  66% {
+    transform: rotate(240deg) scale(0.8);
+    filter: blur(100px);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+    filter: blur(60px);
+  }
+}
+
+.animate-wave-slow {
+  animation: wave 20s linear infinite;
+}
+
+.animate-wave-reverse {
+  animation: wave 25s linear infinite reverse;
+}
+
