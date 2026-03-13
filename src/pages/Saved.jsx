@@ -39,7 +39,7 @@ export default function Saved() {
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
+      <div className={`grid grid-cols-1 ${!isPremium ? 'lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px]' : 'max-w-3xl mx-auto'} gap-4 lg:gap-5 mx-auto`}>
         {/* Right ads sidebar */}
         {!isPremium && (
           <aside className="hidden lg:block sticky top-24 self-start space-y-4">
@@ -109,55 +109,55 @@ export default function Saved() {
                   return (
                     <div
                       key={bookmark.id}
-                      className="rounded-xl border border-gray-200 bg-white hover:border-teal-200 hover:shadow-md p-4 transition"
+                      className="rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-teal-200 hover:shadow-md p-4 transition group/card"
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-3">
+                          <div className="flex items-center gap-2 mb-2">
                             <StatusBadge status={newsItem.verification_status} />
-                            <span className="text-xs text-gray-400">•</span>
-                            <span className="text-xs text-teal-600 font-medium">
+                            <span className="text-xs text-gray-300">•</span>
+                            <span className="px-2 py-0.5 rounded-full bg-teal-50 text-[10px] text-teal-600 font-bold uppercase tracking-wider">
                               {category}
                             </span>
                           </div>
-                          <Link to={`/posts/${newsItem.id}`} className="block group">
-                            <h3 className="text-base font-semibold text-gray-900 group-hover:text-teal-600 transition mb-2 line-clamp-2">
+                          <Link to={`/posts/${newsItem.id}`} className="block">
+                            <h3 className="text-lg font-bold text-gray-900 group-hover/card:text-teal-600 transition-colors mb-2 leading-tight line-clamp-2">
                               {newsItem.title}
                             </h3>
-                          </Link>
-                          {newsItem.content && (
-                            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                              {newsItem.content}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">
-                              حُفظ في {savedDate}
-                            </span>
+                          </Link> 
+                          
+                          <div className="flex items-center gap-3 mt-3">
+                            <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg bg-gray-100/50 text-gray-500">
+                              <Bookmark className="h-3 w-3 fill-current" />
+                              <span className="text-[11px] font-medium">
+                                حُفظ في {savedDate}
+                              </span>
+                            </div>
+                            
                             {bookmark.note && (
-                              <>
-                                <span className="text-xs text-gray-300">•</span>
-                                <span className="text-xs text-gray-500 italic line-clamp-1">
+                              <div className="flex items-center gap-1.5 py-1 px-2 rounded-lg bg-amber-50 text-amber-600 border border-amber-100">
+                                <span className="text-[11px] font-medium italic line-clamp-1">
                                   {bookmark.note}
                                 </span>
-                              </>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-col gap-2 shrink-0">
+
+                        <div className="flex flex-col gap-2 shrink-0 self-center opacity-0 group-hover/card:opacity-100 transition-opacity">
                           <Link
                             to={`/posts/${newsItem.id}`}
-                            className="p-2.5 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-gray-50 transition"
+                            className="p-2.5 rounded-xl bg-white text-gray-400 shadow-sm border border-gray-100 hover:text-teal-600 hover:border-teal-200 transition-all hover:scale-110"
                             title="عرض الخبر"
                           >
-                            <ExternalLink className="h-5 w-5" />
+                            <ExternalLink className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => handleRemoveBookmark(newsItem.id)}
-                            className="p-2.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
+                            className="p-2.5 rounded-xl bg-white text-gray-400 shadow-sm border border-gray-100 hover:text-red-600 hover:border-red-200 transition-all hover:scale-110"
                             title="إزالة من المحفوظات"
                           >
-                            <Trash2 className="h-5 w-5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </div>

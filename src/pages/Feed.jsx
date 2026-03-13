@@ -241,16 +241,16 @@ export default function Feed() {
         <section className="min-w-0">
           <FilterTabs active={activeFilter} onChange={handleFilterChange} />
 
-          {/* Subtle loading bar for refetches (keeps content visible) */}
-          {newsFetching && !newsLoading && (
-            <div className="w-full h-0.5 bg-gray-100 rounded overflow-hidden mb-3">
-              <div className="h-full w-1/3 bg-teal-400 rounded animate-pulse" />
+          {/* Loading indicator for refetches / filter changes (keeps content visible) */}
+          {newsFetching && !newsLoading && !isFetchingNextPage && (
+            <div className="flex justify-center mb-4 mt-2">
+              <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-12 h-12 object-contain" />
             </div>
           )}
 
           {newsLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader className="h-6 w-6 animate-spin text-teal-500" />
+              <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-16 h-16 object-contain" />
             </div>
           ) : newsError ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -286,7 +286,7 @@ export default function Feed() {
               {/* Sentinel + Load-more */}
               <div ref={loadMoreRef} className="py-4 flex justify-center">
                 {isFetchingNextPage ? (
-                  <Loader className="h-5 w-5 animate-spin text-teal-500" />
+                  <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-10 h-10 object-contain" />
                 ) : hasNextPage ? (
                   <button
                     onClick={() => fetchNextPage()}
