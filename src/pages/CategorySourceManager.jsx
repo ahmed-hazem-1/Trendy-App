@@ -7,6 +7,7 @@ import FormSelect from '../UI/FormSelect';
 export default function CategorySourceManager() {
   const [categories, setCategories] = useState([]);
   const [trustedSources, setTrustedSources] = useState([]);
+  const [allCategoryLinks, setAllCategoryLinks] = useState([]);
   const [newsCounts, setNewsCounts] = useState({});
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -17,6 +18,7 @@ export default function CategorySourceManager() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '' });
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
 
   const [linkForm, setLinkForm] = useState({ sourceId: '' });
   const [isLinking, setIsLinking] = useState(false);
@@ -25,6 +27,7 @@ export default function CategorySourceManager() {
   const [sourceForm, setSourceForm] = useState({ name: '', domain: '' });
   const [selectedCategoriesForSource, setSelectedCategoriesForSource] = useState([]);
   const [isCreatingSource, setIsCreatingSource] = useState(false);
+  const [editingSourceId, setEditingSourceId] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -33,10 +36,11 @@ export default function CategorySourceManager() {
   async function fetchData() {
     setIsSyncing(true);
     // Fetch categories and sources
-    const [catsRes, sourcesRes, newsRes] = await Promise.all([
+    const [catsRes, sourcesRes, newsRes, linksRes] = await Promise.all([
       supabase.from('categories').select('*').order('display_order', { ascending: true }),
       supabase.from('trusted_sources').select('*').eq('is_active', true),
-      supabase.from('news_items').select('category_id')
+      supabase.from('news_items').select('category_id'),
+      supabase.from('category_sources').select('id, source_id, category_id, is_active'),
     ]);
     
     if (catsRes.data) {
@@ -46,6 +50,7 @@ export default function CategorySourceManager() {
       }
     }
     if (sourcesRes.data) setTrustedSources(sourcesRes.data);
+    if (linksRes.data) setAllCategoryLinks(linksRes.data);
     
     // Manual count mapping since PostgREST relations might be complex to deduce blind
     if (newsRes.data) {
@@ -88,7 +93,7 @@ export default function CategorySourceManager() {
     }
   }, [selectedCategoryId]);
 
-  const handleCreateCategory = async () => {
+  const handleSaveCategory = async () => {
     const name = categoryForm.name.trim();
     const rawSlug = categoryForm.slug.trim();
     if (!name) {
@@ -106,40 +111,54 @@ export default function CategorySourceManager() {
       autoSlug;
 
     setIsCreatingCategory(true);
-    const { data, error } = await supabase
-      .from('categories')
-      .insert([
-        {
-          name,
-          slug: finalSlug || undefined,
-          display_order: categories.length + 1,
-          is_active: true,
-        },
-      ])
-      .select()
-      .single();
-    setIsCreatingCategory(false);
 
-    if (error) {
-      console.error('Failed to create category:', error.message);
-      alert('تعذر إنشاء الفئة.');
-      return;
+    if (editingCategoryId) {
+      const { data, error } = await supabase
+        .from('categories')
+        .update({ name, slug: finalSlug || undefined })
+        .eq('id', editingCategoryId)
+        .select()
+        .single();
+
+      setIsCreatingCategory(false);
+
+      if (error) {
+        console.error('Failed to update category:', error.message);
+        alert('تعذر تحديث الفئة.');
+        return;
+      }
+
+      setCategories((prev) => prev.map((c) => (c.id === editingCategoryId ? data : c)));
+      setSelectedCategoryId(data.id);
+    } else {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert([
+          {
+            name,
+            slug: finalSlug || undefined,
+            display_order: categories.length + 1,
+            is_active: true,
+          },
+        ])
+        .select()
+        .single();
+
+      setIsCreatingCategory(false);
+
+      if (error) {
+        console.error('Failed to create category:', error.message);
+        alert('تعذر إنشاء الفئة.');
+        return;
+      }
+
+      setCategories([...categories, data]);
+      setSelectedCategoryId(data.id);
     }
 
-    setCategories([...categories, data]);
-    setSelectedCategoryId(data.id);
     setCategoryForm({ name: '', slug: '' });
+    setEditingCategoryId(null);
     setIsCategoryModalOpen(false);
-  };
-
-  const handleDeleteSource = async (id) => {
-    const { error } = await supabase.from('category_sources').delete().eq('id', id);
-    if (error) {
-      console.error('Failed to delete category source:', error.message);
-      alert('تعذر حذف المصدر من الفئة.');
-      return;
-    }
-    setCategorySources((prev) => prev.filter((link) => link.id !== id));
   };
 
   const handleToggleSourceStatus = async (id, isActive) => {
@@ -157,9 +176,9 @@ export default function CategorySourceManager() {
     );
   };
 
-  const handleCreateSource = async () => {
+  const handleSaveSource = async () => {
     if (selectedCategoriesForSource.length === 0) {
-      alert('اختر فئة واحدة على الأقل للمصدر الجديد.');
+      alert('اختر فئة واحدة على الأقل للمصدر.');
       return;
     }
 
@@ -173,63 +192,93 @@ export default function CategorySourceManager() {
 
     setIsCreatingSource(true);
 
-    // Check if domain already exists
-    const { data: existingDomain, error: checkError } = await supabase
+    // Check if domain exists for a DIFFERENT source when editing/creating
+    const { data: existingDomain } = await supabase
       .from('trusted_sources')
       .select('id')
       .eq('domain', domain)
       .single();
 
-    if (existingDomain) {
+    if (existingDomain && existingDomain.id !== editingSourceId) {
       alert('هذا النطاق موجود بالفعل في قاعدة البيانات.');
       setIsCreatingSource(false);
       return;
     }
 
-    const { data: newSource, error: sourceError } = await supabase
-      .from('trusted_sources')
-      .insert([
-        {
-          name,
-          domain,
-          is_active: true,
-          current_credibility_score: 80.00,
-        },
-      ])
-      .select()
-      .single();
+    let sourceId = editingSourceId;
 
-    if (sourceError) {
-      console.error('Failed to create source:', sourceError.message);
-      alert('تعذر إنشاء المصدر الجديد.');
-      setIsCreatingSource(false);
-      return;
+    if (editingSourceId) {
+      const { data: updated, error: updateError } = await supabase
+        .from('trusted_sources')
+        .update({ name, domain })
+        .eq('id', editingSourceId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('Failed to update source:', updateError.message);
+        alert('تعذر تحديث المصدر.');
+        setIsCreatingSource(false);
+        return;
+      }
+
+      setTrustedSources((prev) => prev.map((s) => (s.id === editingSourceId ? updated : s)));
+    } else {
+      const { data: newSource, error: sourceError } = await supabase
+        .from('trusted_sources')
+        .insert([
+          {
+            name,
+            domain,
+            is_active: true,
+            current_credibility_score: 80.0,
+          },
+        ])
+        .select()
+        .single();
+
+      if (sourceError) {
+        console.error('Failed to create source:', sourceError.message);
+        alert('تعذر إنشاء المصدر الجديد.');
+        setIsCreatingSource(false);
+        return;
+      }
+
+      setTrustedSources((prev) => [...prev, newSource]);
+      sourceId = newSource.id;
     }
 
-    setTrustedSources((prev) => [...prev, newSource]);
+    // Reset existing links then insert new ones
+    if (sourceId) {
+      await supabase.from('category_sources').delete().eq('source_id', sourceId);
+      const categorySourceLinks = selectedCategoriesForSource.map((catId) => ({
+        category_id: catId,
+        source_id: sourceId,
+        region: 'Global',
+        is_active: true,
+      }));
+      const { error: linkError, data: linkData } = await supabase
+        .from('category_sources')
+        .insert(categorySourceLinks)
+        .select();
 
-    // Link source to all selected categories
-    const categorySourceLinks = selectedCategoriesForSource.map(catId => ({
-      category_id: catId,
-      source_id: newSource.id,
-      region: 'Global',
-      is_active: true,
-    }));
-
-    const { error: linkError } = await supabase
-      .from('category_sources')
-      .insert(categorySourceLinks);
+      if (linkError) {
+        console.error('Failed to link source:', linkError.message);
+        alert('تم حفظ المصدر لكن تعذر ربطه بالفئات.');
+      } else if (linkData) {
+        setAllCategoryLinks((prev) => {
+          const remaining = prev.filter((l) => l.source_id !== sourceId);
+          return [...remaining, ...linkData];
+        });
+      }
+    }
 
     setIsCreatingSource(false);
-
-    if (linkError) {
-      console.error('Failed to link new source:', linkError.message);
-      alert('تم إنشاء المصدر لكن تعذر ربطه بالفئات.');
-    }
-
     setSourceForm({ name: '', domain: '' });
     setSelectedCategoriesForSource([]);
+    setEditingSourceId(null);
     setIsSourceModalOpen(false);
+
     if (selectedCategoryId) {
       fetchCategorySources(selectedCategoryId);
     }
@@ -271,6 +320,51 @@ export default function CategorySourceManager() {
     }
 
     setCategorySources((prev) => prev.filter((s) => s.id !== linkId));
+    setAllCategoryLinks((prev) => prev.filter((l) => l.id !== linkId));
+  };
+
+  const handleDeleteSource = async (sourceId) => {
+    if (!confirm('سيتم حذف المصدر وجميع روابطه بالفئات. متابعة؟')) return;
+
+    await supabase.from('category_sources').delete().eq('source_id', sourceId);
+    const { error } = await supabase.from('trusted_sources').delete().eq('id', sourceId);
+
+    if (error) {
+      console.error('Failed to delete source:', error.message);
+      alert('تعذر حذف المصدر.');
+      return;
+    }
+
+    setTrustedSources((prev) => prev.filter((s) => s.id !== sourceId));
+    setAllCategoryLinks((prev) => prev.filter((l) => l.source_id !== sourceId));
+    fetchCategorySources(selectedCategoryId);
+  };
+
+  const handleOpenCategoryModal = (cat) => {
+    if (cat) {
+      setCategoryForm({ name: cat.name || '', slug: cat.slug || '' });
+      setEditingCategoryId(cat.id);
+    } else {
+      setCategoryForm({ name: '', slug: '' });
+      setEditingCategoryId(null);
+    }
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleOpenSourceModal = (source) => {
+    if (source) {
+      setSourceForm({ name: source.name || '', domain: source.domain || '' });
+      setEditingSourceId(source.id);
+      const linkedCats = allCategoryLinks
+        .filter((l) => l.source_id === source.id)
+        .map((l) => l.category_id);
+      setSelectedCategoriesForSource(linkedCats);
+    } else {
+      setSourceForm({ name: '', domain: '' });
+      setSelectedCategoriesForSource([]);
+      setEditingSourceId(null);
+    }
+    setIsSourceModalOpen(true);
   };
 
   return (
@@ -290,7 +384,7 @@ export default function CategorySourceManager() {
               <span className="text-sm font-bold text-gray-500 tracking-wider">إجمالي الفئات</span>
               <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100"><Layers size={20}/></div>
             </div>
-            <div className="flex items-end gap-3">
+                    <div className="flex items-center gap-2">
                <span className="text-4xl font-black text-gray-900 tracking-tighter">{categories.length}</span>
                <span className="text-sm text-green-500 font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+2.4%</span>
             </div>
@@ -302,10 +396,10 @@ export default function CategorySourceManager() {
               <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100"><ShieldCheck size={20}/></div>
             </div>
             <div className="flex items-end gap-3">
-               <span className="text-4xl font-black text-gray-900 tracking-tighter">{trustedSources.length}</span>
-               <span className="text-sm text-green-500 font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+12%</span>
+              <span className="text-4xl font-black text-gray-900 tracking-tighter">{trustedSources.length}</span>
+              <span className="text-sm text-green-500 font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+12%</span>
             </div>
-         </div>
+          </div>
          
          <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 flex flex-col justify-between hover:transition-shadow">
             <div className="flex justify-between items-start mb-6">
@@ -333,7 +427,7 @@ export default function CategorySourceManager() {
                 <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">{categories.length} فئة</span>
                 <Button
                   onClick={() => setIsCategoryModalOpen(true)}
-                  className="w-auto h-8 px-3 rounded-lg text-[11px] font-semibold bg-teal-600 hover:bg-teal-700 text-white"
+                  className="min-w-[140px] h-8 px-3 rounded-lg text-[11px] font-semibold bg-teal-600 hover:bg-teal-700 text-white"
                 >
                   <Plus size={12} /> فئة جديدة
                 </Button>
@@ -387,7 +481,7 @@ export default function CategorySourceManager() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Edit handler can be implemented later
+                          handleOpenCategoryModal(cat);
                         }}
                         className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600"
                         title="تعديل"
@@ -448,7 +542,7 @@ export default function CategorySourceManager() {
                    <span className="text-[11px] font-black text-gray-800 uppercase tracking-widest">المصادر</span>
                    <Button
                      onClick={() => setIsSourceModalOpen(true)}
-                     className="w-auto px-3 h-8 rounded-lg text-[11px] font-semibold bg-teal-600 hover:bg-teal-700 text-white"
+                     className="min-w-[140px] px-3 h-8 rounded-lg text-[11px] font-semibold bg-teal-600 hover:bg-teal-700 text-white"
                    >
                      <Plus size={12} /> مصدر جديد
                    </Button>
@@ -470,6 +564,14 @@ export default function CategorySourceManager() {
                          <div className="flex items-center gap-1">
                            <button
                              type="button"
+                             onClick={() => handleOpenSourceModal(source)}
+                             className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                             title="تعديل المصدر"
+                           >
+                             <Edit2 size={14} />
+                           </button>
+                           <button
+                             type="button"
                              onClick={() => handleToggleSourceStatus(link.id, link.is_active)}
                              className={`px-2 py-1 text-[10px] rounded font-semibold transition-colors ${
                                link.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
@@ -481,6 +583,7 @@ export default function CategorySourceManager() {
                              type="button"
                              onClick={() => handleDeleteSourceFromCategory(link.id)}
                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                             title="حذف الرابط"
                            >
                              <Trash2 size={14} />
                            </button>
@@ -489,6 +592,54 @@ export default function CategorySourceManager() {
                      );
                    })}
                  </div>
+
+                 {/* Unassigned sources */}
+                 {(() => {
+                   const linkedSourceIds = new Set(allCategoryLinks.map((l) => l.source_id));
+                   const unassignedSources = trustedSources.filter((src) => !linkedSourceIds.has(src.id));
+                   if (unassignedSources.length === 0) return null;
+                   return (
+                     <div className="mt-4 border-t border-gray-100 pt-3">
+                       <div className="flex items-center gap-2 mb-2">
+                         <span className="text-[11px] font-black text-gray-800 uppercase tracking-widest">مصادر بدون فئة</span>
+                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
+                           {unassignedSources.length}
+                         </span>
+                       </div>
+                       <div className="space-y-2">
+                         {unassignedSources.map((src) => (
+                           <div key={src.id} className="flex items-center justify-between p-2 rounded-lg border border-gray-100 bg-white">
+                             <div className="flex-1 min-w-0">
+                               <p className="font-semibold text-sm text-gray-900 truncate">{src.name}</p>
+                               <p className="text-xs text-gray-500 truncate">{src.domain}</p>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <button
+                                 type="button"
+                                 onClick={() => handleOpenSourceModal(src)}
+                                 className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                 title="تعديل المصدر"
+                               >
+                                 <Edit2 size={14} />
+                               </button>
+                               <button
+                                 type="button"
+                                 onClick={() => handleDeleteSource(src.id)}
+                                 className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                 title="حذف المصدر"
+                               >
+                                 <Trash2 size={14} />
+                               </button>
+                               <span className="inline-flex items-center px-2 py-1 text-[10px] rounded font-semibold bg-amber-100 text-amber-700 whitespace-nowrap">
+                                 بدون فئة
+                               </span>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   );
+                 })()}
                </div>
              </div>
            )}
@@ -542,11 +693,11 @@ export default function CategorySourceManager() {
                   إلغاء
                 </button>
                 <Button
-                  onClick={handleCreateCategory}
+                  onClick={handleSaveCategory}
                   isLoading={isCreatingCategory}
                   className="w-auto px-4 h-9 rounded-lg text-sm bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                  حفظ الفئة
+                  {editingCategoryId ? 'تحديث الفئة' : 'حفظ الفئة'}
                 </Button>
               </div>
             </div>
@@ -624,11 +775,11 @@ export default function CategorySourceManager() {
                   إلغاء
                 </button>
                 <Button
-                  onClick={handleCreateSource}
+                  onClick={handleSaveSource}
                   isLoading={isCreatingSource}
                   className="w-auto px-4 h-9 rounded-lg text-sm bg-purple-600 hover:bg-purple-700 text-white"
                 >
-                  حفظ المصدر
+                  {editingSourceId ? 'تحديث المصدر' : 'حفظ المصدر'}
                 </Button>
               </div>
             </div>
