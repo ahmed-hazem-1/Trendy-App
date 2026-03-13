@@ -1,10 +1,66 @@
-import { LayoutGrid } from "lucide-react";
+import {
+  LayoutGrid,
+  Laptop,
+  Scale,
+  Trophy,
+  Users,
+  LineChart,
+  Stethoscope,
+  Microscope,
+  Clapperboard,
+  GraduationCap,
+  Leaf,
+} from "lucide-react";
 
 import ProfileCard from "../../UI/ProfileCard";
 import { useCategories } from "../../hooks/useNews";
 import { useCategoryNavigation } from "../../hooks/useCategoryNavigation";
 
-const HASH = <span className="text-sm font-semibold">#</span>;
+const CATEGORY_ICONS = {
+  // English slugs
+  technology: Laptop,
+  tech: Laptop,
+  politics: Scale,
+  sports: Trophy,
+  social: Users,
+  economy: LineChart,
+  health: Stethoscope,
+  science: Microscope,
+  entertainment: Clapperboard,
+  education: GraduationCap,
+  environment: Leaf,
+  other: LayoutGrid,
+  general: LayoutGrid,
+
+  // Arabic names/slugs
+  "تكنولوجيا": Laptop,
+  "سياسة": Scale,
+  "رياضة": Trophy,
+  "مجتمع": Users,
+  "اقتصاد": LineChart,
+  "صحة": Stethoscope,
+  "علوم": Microscope,
+  "ترفيه": Clapperboard,
+  "تعليم": GraduationCap,
+  "بيئة": Leaf,
+  "أخرى": LayoutGrid,
+  "اخرى": LayoutGrid,
+  "عام": LayoutGrid,
+};
+
+const renderCategoryIcon = (cat, isActive) => {
+  const key = (cat?.slug || cat?.name || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+  const Icon = CATEGORY_ICONS[key] || LayoutGrid;
+  return (
+    <Icon
+      className={`h-4 w-4 ${isActive ? "text-teal-700" : "text-gray-400"}`}
+    />
+  );
+};
 
 export default function UserSidebar({
   activeCategory = "all",
@@ -56,7 +112,7 @@ export default function UserSidebar({
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              {HASH}
+              {renderCategoryIcon(cat, activeCategory === cat.slug)}
               {cat.name}
             </button>
           ))}

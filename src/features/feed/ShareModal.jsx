@@ -176,7 +176,7 @@ export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
         </div>
 
         {/* Social Grid */}
-        <div className="px-4 sm:px-5 py-4 sm:py-5 overflow-y-auto">
+        <div className="px-4 sm:px-5 py-4 sm:py-5 overflow-y-auto scrollbar-hide">
           <div className="grid grid-cols-3 gap-3 sm:gap-4">
             {SOCIAL_PLATFORMS.map((platform) => (
               <button

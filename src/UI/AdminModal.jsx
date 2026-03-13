@@ -69,7 +69,7 @@ export default function AdminModal({ isOpen, onClose }) {
       {/* Modal — slides from bottom */}
       <div
         ref={modalRef}
-        className={`absolute bottom-0 left-0 right-0 bg-white transition-transform duration-300 rounded-t-3xl max-h-[70vh] overflow-y-auto ${
+        className={`absolute bottom-0 left-0 right-0 bg-white transition-transform duration-300 rounded-t-3xl max-h-[70vh] overflow-y-auto scrollbar-hide ${
           isOpen ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
