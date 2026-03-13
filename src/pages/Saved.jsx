@@ -5,14 +5,13 @@ import { useUserBookmarks, useToggleBookmark } from "../hooks/useNews";
 import { useAuth } from "../hooks/useAuth";
 import StatusBadge from "../features/feed/StatusBadge";
 import MobileSidebar from "../UI/MobileSidebar";
-import BottomSheet from "../UI/BottomSheet";
 import { useState } from "react";
 import { AdCard, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import { selectIsPremium } from "../store/authSlice";
 
 export default function Saved() {
-  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
+  const { sidebarOpen, closeSidebar } = useOutletContext();
   const { profile } = useAuth();
   const isPremium = useSelector(selectIsPremium);
   const { data: bookmarks = [], isLoading: bookmarksLoading, isFetching: bookmarksFetching } = useUserBookmarks();
@@ -185,12 +184,6 @@ export default function Saved() {
           </aside>
         )}
       </div>
-      <BottomSheet
-        isOpen={bottomSheetOpen}
-        onClose={closeBottomSheet}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
     </>
   );
 }

@@ -2,6 +2,7 @@ import { LayoutGrid } from "lucide-react";
 
 import ProfileCard from "../../UI/ProfileCard";
 import { useCategories } from "../../hooks/useNews";
+import { useCategoryNavigation } from "../../hooks/useCategoryNavigation";
 
 const HASH = <span className="text-sm font-semibold">#</span>;
 
@@ -10,6 +11,17 @@ export default function UserSidebar({
   onCategoryChange,
 }) {
   const { data: categories = [] } = useCategories();
+  const navigateToFeedWithCategory = useCategoryNavigation();
+  
+  // Smart handler: if onCategoryChange is provided (Feed context), use it
+  // Otherwise, navigate to /feed with the category
+  const handleCategorySelect = (category) => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    } else {
+      navigateToFeedWithCategory(category);
+    }
+  };
 
   return (
     <aside className="">
@@ -23,7 +35,7 @@ export default function UserSidebar({
         <nav className="space-y-1">
           {/* "All" option */}
           <button
-            onClick={() => onCategoryChange?.("all")}
+            onClick={() => handleCategorySelect("all")}
             className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
               activeCategory === "all"
                 ? "bg-teal-50 text-teal-800"
@@ -37,7 +49,7 @@ export default function UserSidebar({
           {categories.map((cat) => (
             <button
               key={cat.slug}
-              onClick={() => onCategoryChange?.(cat.slug)}
+              onClick={() => handleCategorySelect(cat.slug)}
               className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
                 activeCategory === cat.slug
                   ? "bg-teal-50 text-teal-800"

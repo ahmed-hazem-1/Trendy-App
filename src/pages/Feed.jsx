@@ -9,7 +9,6 @@ import FilterTabs from "../features/feed/FilterTabs";
 import NewsCard from "../features/feed/NewsCard";
 import UserSidebar from "../features/feed/UserSidebar";
 import TrendingSidebar from "../features/feed/TrendingSidebar";
-import BottomSheet from "../UI/BottomSheet";
 import MobileSidebar from "../UI/MobileSidebar";
 import {
   useNewsItems,
@@ -63,13 +62,7 @@ export default function Feed() {
   const activeFilter = searchParams.get("filter") || "ALL";
   const activeCategory = searchParams.get("category") || "all";
 
-  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet, openBottomSheet } = useOutletContext();
-  const [localBottomSheetOpen, setLocalBottomSheetOpen] = useState(false);
-
-  // Use context state if available (from AppLayout), otherwise use local state
-  const isBottomSheetOpen = bottomSheetOpen !== undefined ? bottomSheetOpen : localBottomSheetOpen;
-  const handleCloseBottomSheet = closeBottomSheet || (() => setLocalBottomSheetOpen(false));
-  const handleOpenBottomSheet = openBottomSheet || (() => setLocalBottomSheetOpen(true));
+  const { sidebarOpen, closeSidebar } = useOutletContext();
 
   // Use navigate() directly so all useSearchParams consumers re-render.
   // Read from window.location.search for always-fresh params.
@@ -224,14 +217,6 @@ export default function Feed() {
       <MobileSidebar
         isOpen={sidebarOpen}
         onClose={closeSidebar}
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-      />
-
-      {/* Bottom sheet for mobile categories */}
-      <BottomSheet
-        isOpen={isBottomSheetOpen}
-        onClose={handleCloseBottomSheet}
         activeCategory={activeCategory}
         onCategoryChange={handleCategoryChange}
       />

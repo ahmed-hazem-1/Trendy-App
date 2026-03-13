@@ -30,7 +30,6 @@ import FormInput from "../UI/FormInput";
 import FormSelect from "../UI/FormSelect";
 import Button from "../UI/Button";
 import MobileSidebar from "../UI/MobileSidebar";
-import BottomSheet from "../UI/BottomSheet";
 import { EGYPT_GOVERNORATES } from "../utils/constants";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
@@ -66,7 +65,7 @@ const FALLBACK_USER = {
 };
 
 export default function Profile() {
-  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
+  const { sidebarOpen, closeSidebar } = useOutletContext();
   const { profile, refreshProfile } = useAuth();
   const isPremium = useSelector(selectIsPremium);
   const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
@@ -562,12 +561,6 @@ export default function Profile() {
           </aside>
         )}
       </div>
-      <BottomSheet
-        isOpen={bottomSheetOpen}
-        onClose={closeBottomSheet}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
     </>
   );
 }

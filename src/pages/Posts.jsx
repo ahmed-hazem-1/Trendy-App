@@ -24,7 +24,6 @@ import {
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
 import MobileSidebar from "../UI/MobileSidebar";
-import BottomSheet from "../UI/BottomSheet";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import {
@@ -139,7 +138,7 @@ const VERDICT_ICON = {
 
 export default function Posts() {
   const { id } = useParams();
-  const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
+  const { sidebarOpen, closeSidebar } = useOutletContext();
   // For backward compatibility, context may have sidebarOpen or bottomSheetOpen
   const [activeCategory, setActiveCategory] = useState("all");
   const [shareOpen, setShareOpen] = useState(false);
@@ -641,12 +640,6 @@ export default function Posts() {
         onClose={() => setShareOpen(false)}
         postUrl={postUrl}
         postTitle={post.title}
-      />
-      <BottomSheet
-        isOpen={bottomSheetOpen}
-        onClose={closeBottomSheet}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
       />
     </>
   );

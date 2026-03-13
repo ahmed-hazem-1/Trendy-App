@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import NavBar from "./NavBar";
 import BottomNav from "./BottomNav";
@@ -7,6 +7,7 @@ import AdminModal from "./AdminModal";
 import OnboardingInterests from "./OnboardingInterests";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
+import BottomSheet from "./BottomSheet";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -14,6 +15,8 @@ export default function AppLayout() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const { profile, refreshProfile, isAuthenticated } = useAuth();
   const [isOnboardingLoading, setIsOnboardingLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const activeCategory = searchParams.get("category") || "all";
   
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
@@ -51,6 +54,11 @@ export default function AppLayout() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <Outlet context={{ sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet, openBottomSheet }} />
       </main>
+      <BottomSheet
+        isOpen={bottomSheetOpen}
+        onClose={closeBottomSheet}
+        activeCategory={activeCategory}
+      />
       <BottomNav onCategoriesOpen={openBottomSheet} onAdminModalOpen={openAdminModal} />
       <AdminModal isOpen={adminModalOpen} onClose={closeAdminModal} />
 

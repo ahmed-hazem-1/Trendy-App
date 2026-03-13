@@ -1,6 +1,7 @@
 import { X, LayoutGrid, Crown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useCategories } from "../hooks/useNews";
+import { useCategoryNavigation } from "../hooks/useCategoryNavigation";
 import PremiumModal from "./PremiumModal";
 
 const HASH = <span className="text-sm font-semibold">#</span>;
@@ -9,6 +10,18 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
   const sheetRef = useRef(null);
   const [premiumOpen, setPremiumOpen] = useState(false);
   const { data: categories = [] } = useCategories();
+  const navigateToFeedWithCategory = useCategoryNavigation();
+  
+  // Smart handler: if onCategoryChange is provided (Feed context), use it
+  // Otherwise, navigate to /feed with the category
+  const handleCategorySelection = (category) => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    } else {
+      navigateToFeedWithCategory(category);
+    }
+    onClose();
+  };
 
   // Lock body scroll & close on Escape
   useEffect(() => {
@@ -32,8 +45,7 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
   }
 
   function handleCategoryClick(key) {
-    onCategoryChange?.(key);
-    onClose();
+    handleCategorySelection(key);
   }
 
   function handlePremiumClick() {

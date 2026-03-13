@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useSearchParams } from 'react-router-dom';
 import NavBar from './NavBar';
 import BottomNav from './BottomNav';
 import MobileSidebar from './MobileSidebar';
 import AdminModal from './AdminModal';
 import ProfileCard from './ProfileCard';
 import { ShieldAlert, Layers, Megaphone, Users } from 'lucide-react';
+import BottomSheet from './BottomSheet';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const activeCategory = searchParams.get('category') || 'all';
   
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
@@ -89,6 +92,11 @@ export default function AdminLayout() {
         </div>
       </main>
 
+      <BottomSheet
+        isOpen={bottomSheetOpen}
+        onClose={closeBottomSheet}
+        activeCategory={activeCategory}
+      />
       <BottomNav onCategoriesOpen={openBottomSheet} onAdminModalOpen={openAdminModal} />
       <AdminModal isOpen={adminModalOpen} onClose={closeAdminModal} />
       
