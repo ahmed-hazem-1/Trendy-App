@@ -59,7 +59,7 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
       {/* Bottom Sheet — slides from bottom */}
       <div
         ref={sheetRef}
-        className={`absolute bottom-0 left-0 right-0 bg-white shadow-2xl transition-transform duration-300 rounded-t-3xl max-h-[70vh] overflow-y-auto ${
+        className={`absolute bottom-0 left-0 right-0 bg-white transition-transform duration-300 rounded-t-3xl max-h-[70vh] overflow-y-auto ${
           isOpen ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
@@ -118,7 +118,7 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
           </nav>
 
           {/* Premium Box */}
-          <div className="mt-6 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 p-4 text-white shadow-lg relative overflow-hidden">
+          <div className="mt-6 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 p-4 text-white relative overflow-hidden">
             {/* Decorative circles */}
             <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
             <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-white/10" />

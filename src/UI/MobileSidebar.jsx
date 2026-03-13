@@ -50,7 +50,7 @@ export default function MobileSidebar({
       {/* Sidebar panel — slides from right (RTL) */}
       <div
         ref={sidebarRef}
-        className="absolute top-0 right-0 h-full w-70 sm:w-80 bg-gray-50 shadow-2xl mobile-sidebar-enter overflow-y-auto"
+        className="absolute top-0 right-0 h-full w-70 sm:w-80 bg-gray-50 mobile-sidebar-enter overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
@@ -71,7 +71,7 @@ export default function MobileSidebar({
 
         {/* Categories */}
         <div className="px-4 pb-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
               التصنيفات
             </h4>

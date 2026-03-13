@@ -116,7 +116,7 @@ function NewsCard({
 
   return (
     <>
-      <article className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <article className="rounded-xl border border-gray-200 bg-white overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-3 sm:px-5 pt-2.5 sm:pt-4 mb-2 sm:mb-3">
           <div className="flex items-center gap-1.5 sm:gap-2.5">
@@ -153,14 +153,6 @@ function NewsCard({
                 Trendy AI
               </span>
             </div>
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-teal-400 to-emerald-400 opacity-20 blur-sm"></div>
-              <img
-                src="/logo/Trendy-logo-no-text.png"
-                alt="Trendy"
-                className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full object-cover ring-2 ring-teal-200 shadow-md"
-              />
-            </div>
           </div>
         </div>
 
@@ -187,11 +179,11 @@ function NewsCard({
             <button
               onClick={() => setInsightOpen(!insightOpen)}
               className={`flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold mb-2 ms-auto cursor-pointer transition-all duration-300 ${
-                !insightOpen ? "animate-text-glow scale-105" : "text-gray-500 hover:text-purple-600"
+                !insightOpen ? "animate-text-glow scale-105" : "text-gray-500 hover:text-teal-600"
               }`}
             >
               تحليل التحقق بالذكاء الاصطناعي
-              <Sparkles className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${!insightOpen ? "text-purple-600 fill-purple-100/50" : "text-purple-500"}`} />
+              <Sparkles className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${!insightOpen ? "text-teal-600 fill-teal-100/50" : "text-teal-500"}`} />
             </button>
 
             {insightOpen && (
@@ -205,7 +197,7 @@ function NewsCard({
                   <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-[#99d7ff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
                   
                   <div className="flex items-start gap-3 sm:gap-4 relative z-10">
-                    <div className="bg-white/60 p-2 sm:p-2.5 rounded-2xl shadow-sm border border-white/40 shrink-0 mt-0.5 rotation-slow">
+                    <div className="bg-white/60 p-2 sm:p-2.5 rounded-2xl border border-white/40 shrink-0 mt-0.5 rotation-slow">
                       <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 fill-blue-100/50" />
                     </div>
                     <p className="text-xs sm:text-sm text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm">

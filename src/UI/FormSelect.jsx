@@ -106,7 +106,7 @@ export default function FormSelect({
         }}
         className={`flex w-full items-center rounded-lg border bg-gray-50 py-2.5 text-sm outline-none ring-0 transition-all duration-200 ${
           isOpen
-            ? "border-teal-400 ring-2 ring-teal-200/60 shadow-sm"
+            ? "border-teal-400 ring-2 ring-teal-200/60"
             : error
               ? "border-red-400"
               : "border-gray-200 hover:border-gray-300"
@@ -133,7 +133,7 @@ export default function FormSelect({
 
       {/* ── Dropdown Panel ── */}
       <div
-        className={`absolute bottom-full z-50 mb-1.5 w-full origin-bottom rounded-xl border border-gray-200 bg-white shadow-lg shadow-black/8 transition-all duration-200 ${
+        className={`absolute bottom-full z-50 mb-1.5 w-full origin-bottom rounded-xl border border-gray-200 bg-white/8 transition-all duration-200 ${
           isOpen
             ? "scale-y-100 opacity-100"
             : "pointer-events-none scale-y-95 opacity-0"

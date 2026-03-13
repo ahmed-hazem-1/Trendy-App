@@ -40,7 +40,7 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
+      <div className="w-full max-w-lg bg-white rounded-3xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500">
         {/* Header */}
         <div className="bg-linear-to-r from-teal-600 to-emerald-500 p-6 sm:p-8 text-white text-center">
           <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-md">
@@ -63,7 +63,7 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
                   onClick={() => toggleInterest(key)}
                   className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
                     isActive 
-                      ? "border-teal-500 bg-teal-50/50 text-teal-700 shadow-sm" 
+                      ? "border-teal-500 bg-teal-50/50 text-teal-700" 
                       : "border-gray-100 bg-gray-50 text-gray-500 hover:border-teal-200"
                   }`}
                 >
@@ -80,7 +80,7 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
           <Button
             onClick={() => onComplete(selected)}
             disabled={selected.length < 3 || isLoading}
-            className="w-full py-4 text-lg font-bold rounded-2xl shadow-lg shadow-teal-500/20"
+            className="w-full py-4 text-lg font-bold rounded-2xl/20"
           >
             {isLoading ? "جارٍ الحفظ..." : "ابدأ استكشاف تريندي"}
             <ArrowLeft className="ms-2 h-5 w-5" />

@@ -154,7 +154,7 @@ export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl share-modal-enter overflow-hidden max-h-[85vh] sm:max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl share-modal-enter overflow-hidden max-h-[85vh] sm:max-h-[90vh] flex flex-col"
       >
         {/* Mobile drag handle */}
         <div className="flex justify-center pt-2.5 pb-0 sm:hidden">
@@ -185,7 +185,7 @@ export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
                 className="flex flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer active:scale-95 transition-transform"
               >
                 <div
-                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 shadow-md"
+                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
                   style={{ backgroundColor: platform.color }}
                 >
                   <span className="[&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">

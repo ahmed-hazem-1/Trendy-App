@@ -59,7 +59,7 @@ export default function PremiumModal({ isOpen, onClose }) {
 
       <div
         ref={modalRef}
-        className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden premium-modal-enter"
+        className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden premium-modal-enter"
       >
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
@@ -78,7 +78,7 @@ export default function PremiumModal({ isOpen, onClose }) {
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 text-white p-4 sm:p-5 shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 text-white p-4 sm:p-5">
             <div className="absolute -top-10 -left-8 w-32 h-32 rounded-full bg-white/10" />
             <div className="absolute -bottom-16 -right-10 w-40 h-40 rounded-full bg-white/5" />
             <div className="relative flex items-center gap-3 sm:gap-4">

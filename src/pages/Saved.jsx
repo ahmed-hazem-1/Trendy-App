@@ -52,7 +52,7 @@ export default function Saved() {
         {/* Main Content */}
         <section className="space-y-4 lg:space-y-5">
           {/* Page Header */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-12 w-12 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
                 <Bookmark className="h-6 w-6 text-white" />
@@ -67,7 +67,7 @@ export default function Saved() {
           </div>
 
           {/* Saved Posts List */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             {bookmarksLoading ? (
               <div className="text-center py-12">
                 <Loader className="h-8 w-8 animate-spin text-teal-600 mx-auto mb-3" />
@@ -84,7 +84,7 @@ export default function Saved() {
                 </p>
                 <Link
                   to="/feed"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:shadow-md transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:transition"
                 >
                   استكشف الأخبار
                 </Link>
@@ -109,7 +109,7 @@ export default function Saved() {
                   return (
                     <div
                       key={bookmark.id}
-                      className="rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-teal-200 hover:shadow-md p-4 transition group/card"
+                      className="rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-teal-200 hover:p-4 transition group/card"
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex-1 min-w-0">
@@ -147,14 +147,14 @@ export default function Saved() {
                         <div className="flex flex-col gap-2 shrink-0 self-center opacity-0 group-hover/card:opacity-100 transition-opacity">
                           <Link
                             to={`/posts/${newsItem.id}`}
-                            className="p-2.5 rounded-xl bg-white text-gray-400 shadow-sm border border-gray-100 hover:text-teal-600 hover:border-teal-200 transition-all hover:scale-110"
+                            className="p-2.5 rounded-xl bg-white text-gray-400 border border-gray-100 hover:text-teal-600 hover:border-teal-200 transition-all hover:scale-110"
                             title="عرض الخبر"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => handleRemoveBookmark(newsItem.id)}
-                            className="p-2.5 rounded-xl bg-white text-gray-400 shadow-sm border border-gray-100 hover:text-red-600 hover:border-red-200 transition-all hover:scale-110"
+                            className="p-2.5 rounded-xl bg-white text-gray-400 border border-gray-100 hover:text-red-600 hover:border-red-200 transition-all hover:scale-110"
                             title="إزالة من المحفوظات"
                           >
                             <Trash2 className="h-4 w-4" />

@@ -16,7 +16,7 @@ export default function UserSidebar({
       <ProfileCard />
 
       {/* Feeds */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">
           التصنيفات
         </h4>

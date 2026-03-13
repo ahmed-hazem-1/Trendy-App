@@ -8,7 +8,7 @@ export default function NavBar({ onMenuClick }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 bg-white">
       <nav className="max-w-7xl mx-auto flex items-center justify-between py-2 px-3 sm:px-4 lg:px-6">
         {/* يمين: البرغر + الشعار + البحث (RTL) */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-8">

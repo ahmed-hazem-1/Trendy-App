@@ -10,7 +10,7 @@ export function AdCard({ ad, variant = "sidebar" }) {
 
   return (
     <div
-      className={`group relative rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+      className={`group relative rounded-2xl border border-gray-100 bg-white overflow-hidden transition-all duration-300 hover:hover:-translate-y-0.5 ${
         isHorizontal ? "flex items-stretch" : "flex flex-col h-55"
       }`}
     >
@@ -31,7 +31,7 @@ export function AdCard({ ad, variant = "sidebar" }) {
               <div className="absolute top-4 left-12 w-5 h-5 rounded-full bg-white/20" />
             </div>
             {/* Floating icon */}
-            <div className="relative z-10 w-12 h-12 rounded-xl bg-white/25 backdrop-blur-sm flex items-center justify-center shadow-sm">
+            <div className="relative z-10 w-12 h-12 rounded-xl bg-white/25 backdrop-blur-sm flex items-center justify-center">
               <Icon className="h-6 w-6 text-white" />
             </div>
           </>
@@ -75,7 +75,7 @@ export function AdCard({ ad, variant = "sidebar" }) {
 
         {/* CTA button */}
         <button
-          className={`mt-auto w-full text-center rounded-xl bg-linear-to-r ${ad.gradient} px-4 py-2 text-xs font-semibold text-white shadow-sm ${ad.ctaHover} hover:shadow-md transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`mt-auto w-full text-center rounded-xl bg-linear-to-r ${ad.gradient} px-4 py-2 text-xs font-semibold text-white ${ad.ctaHover} hover:transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 ${
             isHorizontal ? "mt-2" : "mt-0"
           }`}
         >
@@ -102,7 +102,7 @@ export function PremiumBanner() {
   if (isPremium) return null;
 
   return (
-    <div className="lg:hidden mb-4 rounded-2xl bg-linear-to-r from-teal-600 to-emerald-500 p-4 text-white shadow-md relative overflow-hidden">
+    <div className="lg:hidden mb-4 rounded-2xl bg-linear-to-r from-teal-600 to-emerald-500 p-4 text-white relative overflow-hidden">
       {/* Decorative circles */}
       <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
       <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-white/10" />

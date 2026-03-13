@@ -8,7 +8,6 @@ export default function UserMenu() {
   const isPremium = useSelector(selectIsPremium);
 
   const name = profile?.full_name || profile?.display_name || "مستخدم";
-  const avatar = profile?.avatar_url || "/logo/Trendy-logo-no-text.png";
   const plan = isPremium ? "Trendy Premium" : "حساب مجاني";
   const profileLink = profile?.id ? `/profile/${profile.id}` : "/login";
 
@@ -32,11 +31,6 @@ export default function UserMenu() {
           </p>
           <p className="text-xs text-text-muted leading-tight">{plan}</p>
         </div>
-        <img
-          src={avatar || "/logo/Trendy-logo-no-text.png"}
-          alt={name}
-          className="h-10 w-10 rounded-full object-cover ring-2 ring-blue-400"
-        />
       </Link>
     </div>
   );

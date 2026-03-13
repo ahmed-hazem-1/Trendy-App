@@ -45,13 +45,13 @@ const MOCK_ADS = [
     title: "النشرة الإخبارية",
     description: "اشترك في نشرتنا الأسبوعية لتصلك أهم الأخبار المحققة",
     cta: "اشترك الآن",
-    gradient: "from-purple-500 to-pink-500",
-    bgGradient: "from-purple-50 to-pink-50",
-    iconBg: "bg-purple-100 text-purple-600",
-    ctaHover: "hover:shadow-purple-200/50",
+    gradient: "from-teal-500 to-emerald-500",
+    bgGradient: "from-teal-50 to-emerald-50",
+    iconBg: "bg-teal-100 text-teal-600",
+    ctaHover: "hover:shadow-teal-200/50",
     icon: Mail,
     badge: "جديد",
-    badgeColor: "bg-purple-100 text-purple-700",
+    badgeColor: "bg-teal-100 text-teal-700",
   },
 ];
 

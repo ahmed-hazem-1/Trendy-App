@@ -237,7 +237,7 @@ export default function Profile() {
           <PremiumBanner />
           
           {/* ── Profile Header Card (Revised: No Banner/Avatar) ── */}
-          <div className="rounded-xl border border-gray-200 bg-linear-to-r from-teal-600 to-emerald-500 shadow-sm p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="rounded-xl border border-gray-200 bg-linear-to-r from-teal-600 to-emerald-500 p-6 sm:p-8 text-white relative overflow-hidden">
             {/* Background design elements */}
             <div className="absolute top-[-20%] right-[-5%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute bottom-[-20%] left-[-5%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -258,7 +258,7 @@ export default function Profile() {
           </div>
 
           {/* ── Interests Section ── */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center flex-row-reverse gap-2">
                 <Heart className="h-5 w-5 text-teal-600" />
@@ -287,7 +287,7 @@ export default function Profile() {
                     onClick={() => toggleInterest(key)}
                     className={`flex items-center gap-2 rounded-full border px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium transition-all cursor-pointer ${
                       active
-                        ? "bg-teal-600 text-white border-teal-600 shadow-md scale-105"
+                        ? "bg-teal-600 text-white border-teal-600 scale-105"
                         : "bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:bg-teal-50/10"
                     }`}
                   >
@@ -300,7 +300,7 @@ export default function Profile() {
           </div>
 
           {/* ── Personal Information Section ── */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-gray-900">
                 المعلومات الشخصية
@@ -442,7 +442,7 @@ export default function Profile() {
           </div>
 
           {/* ── Saved Posts Section ── */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <Bookmark className="h-4 w-4 text-teal-500" />

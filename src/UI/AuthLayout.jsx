@@ -13,7 +13,7 @@ export default function AuthLayout({ title, subtitle, children }) {
         <div className="absolute top-[30%] left-[20%] w-[100%] h-[100%] bg-linear-to-r from-emerald-100/20 to-teal-100/10 rounded-[50%] animate-wave-slow animation-delay-4000 opacity-50" />
       </div>
 
-      <div className="w-full max-w-md rounded-2xl border border-gray-200/50 bg-white/70 p-5 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200/50 bg-white/70 p-5 sm:p-8 backdrop-blur-xl relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-5">
           <img

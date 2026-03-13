@@ -6,7 +6,7 @@ export default function TrendingSidebar({ trendingItems = [] }) {
   return (
     <aside className="sticky top-24 space-y-6 self-start">
       {/* Trending Now */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-base font-bold text-gray-900">الرائج الآن</h3>
           <TrendingUp className="h-5 w-5 text-teal-500" />

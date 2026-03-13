@@ -256,17 +256,12 @@ export default function Posts() {
             العودة إلى الصفحة الرئيسية
           </Link>
 
-          <article className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <article className="rounded-xl border border-gray-200 bg-white overflow-hidden">
             {/* ── Article header ── */}
             <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-gray-100">
               {/* Meta row */}
               <div className="flex flex-wrap items-center gap-3 mb-4 text-xs text-gray-400">
                 <div className="flex items-center gap-1.5">
-                  <img
-                    src="/logo/Trendy-logo-no-text.png"
-                    alt="Trendy"
-                    className="h-7 w-7 rounded-full object-cover ring-1 ring-gray-200"
-                  />
                   <span className="font-bold text-gray-700 text-sm">
                     Trendy AI
                   </span>
@@ -365,7 +360,7 @@ export default function Posts() {
                   <div className="absolute bottom-[-25%] left-[-15%] w-64 h-64 bg-[#99d7ff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
                   
                   <div className="flex items-start gap-4 sm:gap-6 relative z-10">
-                    <div className="bg-white/70 p-3 sm:p-4 rounded-2xl shadow-md border border-white/50 shrink-0 rotation-slow">
+                    <div className="bg-white/70 p-3 sm:p-4 rounded-2xl border border-white/50 shrink-0 rotation-slow">
                       <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 fill-blue-100/50" />
                     </div>
                     <div>
