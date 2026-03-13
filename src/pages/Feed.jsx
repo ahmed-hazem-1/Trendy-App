@@ -20,7 +20,9 @@ import { Loader } from "lucide-react";
 import { selectProfile } from "../store/authSlice";
 
 function mapNewsItem(item) {
-  const category = item.categories?.name || "عام";
+  const category = Array.isArray(item.categories)
+    ? item.categories[0]?.name || "عام"
+    : item.categories?.name || "عام";
   // verdicts comes as an object (unique FK) or array; normalise
   const verdict = Array.isArray(item.verdicts)
     ? (item.verdicts[0] ?? null)

@@ -198,14 +198,19 @@ export async function fetchNewsItems({
       .select(
         `
         id, title, content, verification_status, credibility_score,
-        ingested_at, published_at
+        ingested_at, published_at,
+        categories (name, slug)
       `,
         { count: "exact" },
       )
       .order("ingested_at", { ascending: false });
 
-    // Note: Category filtering is handled at the app level for now
-    // until the news_categories relationship is properly configured in Supabase
+    // Category filtering (slug or list)
+    if (categorySlug && categorySlug !== "all") {
+      query = query.eq("categories.slug", categorySlug);
+    } else if (categorySlugs && categorySlugs.length > 0) {
+      query = query.in("categories.slug", categorySlugs);
+    }
 
     // Apply verdict-based filter
     if (verdictFilter) {
