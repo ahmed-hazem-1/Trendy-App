@@ -280,8 +280,6 @@ export default function Feed() {
                 <NewsCard
                   key={item.id}
                   item={item}
-                  reactionCounts={batchReactionCounts?.[item.id]}
-                  userReaction={batchUserReactions?.[item.id]}
                 />
               ))}
 

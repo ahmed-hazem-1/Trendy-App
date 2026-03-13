@@ -16,6 +16,9 @@ import {
   AlertTriangle,
   HelpCircle,
   Lock,
+  Heart,
+  Meh,
+  Smile,
 } from "lucide-react";
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
@@ -85,18 +88,21 @@ function mapNewsItem(item) {
 
 const REACTION_CONFIG = [
   {
-    type: "SURPRISED",
+    type: "SKEPTICAL", // Mapped to DB constraint
     emoji: "😲",
+    Icon: Smile,
     label: "مفاجأ",
   },
   {
-    type: "LOVED_IT",
+    type: "EXCITED", // Mapped to DB constraint
     emoji: "❤️",
+    Icon: Heart,
     label: "أحببت",
   },
   {
     type: "NEUTRAL",
     emoji: "😐",
+    Icon: Meh,
     label: "محايد",
   },
 ];
@@ -347,19 +353,26 @@ export default function Posts() {
               </div>
             )}
 
-            {/* ── AI analysis / reasoning ── */}
+            {/* ── Reasoning (AI Insights) ── */}
             {post.reasoning && (
               <div className="px-4 sm:px-8 pb-6">
-                <div className="rounded-xl bg-amber-50 border border-amber-100 p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="h-4 w-4 text-teal-500" />
-                    <h3 className="text-sm font-bold text-gray-700">
-                      تحليل التحقق بالذكاء الاصطناعي
-                    </h3>
+                <div className="relative rounded-2xl p-5 sm:p-6 border border-purple-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
+                  {/* Glass Gradient Background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/80 via-purple-100/80 to-pink-100/80 backdrop-blur-md -z-10" />
+                  
+                  <div className="flex items-start gap-3 sm:gap-4 relative z-10">
+                    <div className="bg-white/50 p-2 sm:p-2.5 rounded-xl shadow-sm border border-white/50 shrink-0">
+                      <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-2 sm:mb-2.5 text-sm sm:text-base">
+                        تحليل التحقق بالذكاء الاصطناعي
+                      </h3>
+                      <p className="text-gray-800 leading-relaxed text-xs sm:text-sm font-medium text-right">
+                        &ldquo;{post.reasoning}&rdquo;
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-700 leading-relaxed text-right">
-                    &ldquo;{post.reasoning}&rdquo;
-                  </p>
                 </div>
               </div>
             )}
@@ -538,21 +551,27 @@ export default function Posts() {
               ) : (
                 <div className="flex items-center gap-4">
                   {REACTION_CONFIG.map(
-                    ({ type, emoji, label }) => {
+                    ({ type, emoji, Icon, label }) => {
                       const isActive = userReaction?.reaction_type === type;
                       return (
                         <button
                           key={type}
                           onClick={() => handleReaction(type)}
                           title={label}
-                          className={`flex items-center gap-1.5 text-sm cursor-pointer transition ${
+                          className={`flex flex-row-reverse items-center gap-1.5 text-sm cursor-pointer transition ${
                             isActive
-                              ? "text-base"
-                              : "opacity-50 hover:opacity-75"
+                              ? "text-base font-medium scale-110"
+                              : "text-gray-500 hover:text-gray-700"
                           }`}
                         >
-                          <span className={isActive ? "text-2xl" : "text-lg"}>{emoji}</span>
-                          <span className={isActive ? "block" : "hidden"}>{label}</span>
+                          <span className="flex items-center justify-center">
+                            {isActive ? (
+                              <span className="text-2xl">{emoji}</span>
+                            ) : (
+                              <Icon className="h-[22px] w-[22px] stroke-[1.5]" />
+                            )}
+                          </span>
+                          <span className={isActive ? "block text-gray-800" : "hidden"}>{label}</span>
                           {counts[type] > 0 && (
                             <span className="text-xs font-medium">
                               {counts[type]}
@@ -561,11 +580,6 @@ export default function Posts() {
                         </button>
                       );
                     },
-                  )}
-                  {totalReactions > 0 && (
-                    <span className="text-xs text-gray-300 mr-2">
-                      {totalReactions} تفاعل
-                    </span>
                   )}
                 </div>
               )}

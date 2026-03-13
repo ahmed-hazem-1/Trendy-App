@@ -269,6 +269,7 @@ export function useReactToNews() {
       }
       // Invalidate batch cache so the update is reflected in feed
       queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
+      queryClient.invalidateQueries({ queryKey: ["batchUserReactions"] });
     },
   });
 }
@@ -313,6 +314,7 @@ export function useRemoveReaction() {
     onSuccess: () => {
       // Invalidate batch cache so the update is reflected in feed
       queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
+      queryClient.invalidateQueries({ queryKey: ["batchUserReactions"] });
     },
   });
 }

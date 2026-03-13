@@ -8,6 +8,9 @@ import {
   Bookmark,
   BookmarkCheck,
   Lock,
+  Heart,
+  Meh,
+  Smile,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -27,18 +30,21 @@ import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/au
 
 const REACTION_CONFIG = [
   {
-    type: "SURPRISED",
+    type: "SKEPTICAL", // Mapped to DB constraint
     emoji: "😲",
+    Icon: Smile,
     label: "مفاجأ",
   },
   {
-    type: "LOVED_IT",
+    type: "EXCITED", // Mapped to DB constraint
     emoji: "❤️",
+    Icon: Heart,
     label: "أحببت",
   },
   {
     type: "NEUTRAL",
     emoji: "😐",
+    Icon: Meh,
     label: "محايد",
   },
 ];
@@ -61,17 +67,12 @@ function NewsCard({
   const { data: evidence = [], isFetching: evidenceFetching } =
     useEvidenceItems(item.id, sourcesOpen && isPremium);
 
-  // Use batch data when available; fall back to individual queries (e.g. Posts page)
-  const hasBatch = batchCounts !== undefined;
-  const { data: individualCounts } = useReactionCounts(
-    hasBatch ? null : item.id,
-  );
-  const { data: individualReaction } = useUserReaction(
-    hasBatch ? null : item.id,
-  );
+  // Using TanStack Query's cache which is already seeded perfectly by the batch hooks!
+  const { data: individualCounts } = useReactionCounts(item.id);
+  const { data: individualReaction } = useUserReaction(item.id);
 
-  const reactionCounts = batchCounts || individualCounts;
-  const userReaction = batchUserReaction || individualReaction;
+  const reactionCounts = individualCounts;
+  const userReaction = individualReaction;
   const reactMutation = useReactToNews();
   const removeMutation = useRemoveReaction();
 
@@ -185,18 +186,26 @@ function NewsCard({
           <div className="px-3 sm:px-5 mb-3 sm:mb-4">
             <button
               onClick={() => setInsightOpen(!insightOpen)}
-              className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 ms-auto cursor-pointer hover:text-gray-700 transition"
+              className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 ms-auto cursor-pointer hover:text-purple-600 transition"
             >
               تحليل التحقق بالذكاء الاصطناعي
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-teal-500" />
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-500" />
             </button>
 
             {insightOpen && (
               <>
-                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 sm:p-4 mb-3">
-                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed text-right">
-                    &ldquo;{item.reasoning}&rdquo;
-                  </p>
+                <div className="relative rounded-xl p-3 sm:p-4 mb-3 border border-purple-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
+                  {/* Glass Gradient Background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/80 via-purple-100/80 to-pink-100/80 backdrop-blur-md -z-10" />
+                  
+                  <div className="flex items-start gap-2 sm:gap-3 relative z-10">
+                    <div className="bg-white/50 p-1.5 sm:p-2 rounded-lg shadow-sm border border-white/50 shrink-0 mt-0.5">
+                      <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-medium text-right">
+                      &ldquo;{item.reasoning}&rdquo;
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSourcesOpen(!sourcesOpen)}
@@ -319,29 +328,30 @@ function NewsCard({
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               {REACTION_CONFIG.map(
-                ({ type, emoji, label }) => {
+                ({ type, emoji, Icon, label }) => {
                   const isActive = userReaction?.reaction_type === type;
                   return (
                     <button
                       key={type}
                       onClick={() => handleReaction(type)}
                       title={label}
-                      className={`flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm cursor-pointer transition ${
+                      className={`flex flex-row-reverse items-center gap-1 text-xs sm:text-sm cursor-pointer transition ${
                         isActive
-                          ? "text-sm sm:text-base"
-                          : "text-xs sm:text-sm opacity-50 hover:opacity-75"
+                          ? "text-sm sm:text-base font-medium scale-110"
+                          : "text-gray-500 hover:text-gray-700"
                       }`}
                     >
-                      <span className={isActive ? "text-lg sm:text-xl" : "text-base sm:text-lg"}>{emoji}</span>
-                      {counts[type] > 0 && <span className="text-[10px] sm:text-xs">{counts[type]}</span>}
+                      <span className="flex items-center justify-center">
+                        {isActive ? (
+                          <span className="text-xl sm:text-2xl">{emoji}</span>
+                        ) : (
+                          <Icon className="h-4 w-4 sm:h-5 sm:w-5 stroke-[1.5]" />
+                        )}
+                      </span>
+                      {counts[type] > 0 && <span className="text-[10px] sm:text-xs font-semibold">{counts[type]}</span>}
                     </button>
                   );
                 },
-              )}
-              {totalReactions > 0 && (
-                <span className="text-[10px] sm:text-xs text-gray-300 mr-1">
-                  {totalReactions}
-                </span>
               )}
             </div>
           )}

@@ -423,25 +423,33 @@ export async function fetchUserReaction(newsItemId, userId) {
  * Add or update a reaction on a news item.
  */
 export async function upsertReaction({ newsItemId, userId, reactionType }) {
-  // Use native upsert to avoid race conditions and 409 conflicts
-  const { data, error } = await supabase
-    .from("news_reactions")
-    .upsert(
-      {
+  // Check if a reaction already exists for this user and news item
+  const existing = await fetchUserReaction(newsItemId, userId);
+
+  if (existing) {
+    // Update existing
+    const { data, error } = await supabase
+      .from("news_reactions")
+      .update({ reaction_type: reactionType })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    // Insert new
+    const { data, error } = await supabase
+      .from("news_reactions")
+      .insert({
         news_item_id: newsItemId,
         user_id: userId,
         reaction_type: reactionType,
-      },
-      {
-        onConflict: "news_item_id,user_id", // Specify unique constraint columns
-        ignoreDuplicates: false, // Update on conflict
-      }
-    )
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 }
 
 /**
