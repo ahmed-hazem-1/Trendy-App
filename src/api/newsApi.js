@@ -178,6 +178,44 @@ async function _fetchVerdictsWithRetry(verificationStatus) {
 }
 
 /**
+ * Cache for category slug -> id mapping to avoid redundant queries.
+ */
+const categoryCache = new Map();
+
+/**
+ * Fetch a category ID by slug. Uses caching to avoid redundant queries.
+ */
+async function getCategoryIdBySlug(slug) {
+  if (!slug || slug === "all") return null;
+
+  // Check cache first
+  if (categoryCache.has(slug)) {
+    return categoryCache.get(slug);
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error) {
+      console.error(`Failed to fetch category ID for slug "${slug}":`, error);
+      return null;
+    }
+
+    const categoryId = data?.id || null;
+    categoryCache.set(slug, categoryId);
+    return categoryId;
+  } catch (err) {
+    console.error(`Error fetching category ID for slug "${slug}":`, err);
+    return null;
+  }
+}
+
+/**
  * Fetch paginated news items with related data.
  * Supports filtering by verification_status (via verdicts table) and category.
  */
@@ -205,11 +243,28 @@ export async function fetchNewsItems({
       )
       .order("ingested_at", { ascending: false });
 
-    // Category filtering (slug or list)
+    // Category filtering (slug or list) - filter by category_id directly
     if (categorySlug && categorySlug !== "all") {
-      query = query.eq("categories.slug", categorySlug);
+      const categoryId = await getCategoryIdBySlug(categorySlug);
+      if (categoryId !== null) {
+        query = query.eq("category_id", categoryId);
+      } else {
+        // If category not found, return empty results instead of showing all
+        return { data: [], count: 0, page, pageSize };
+      }
     } else if (categorySlugs && categorySlugs.length > 0) {
-      query = query.in("categories.slug", categorySlugs);
+      // Fetch all category IDs for multiple filters
+      const categoryIds = await Promise.all(
+        categorySlugs.map((slug) => getCategoryIdBySlug(slug))
+      );
+      // Filter out null values to avoid breaking the query
+      const validIds = categoryIds.filter((id) => id !== null);
+      if (validIds.length > 0) {
+        query = query.in("category_id", validIds);
+      } else {
+        // If no valid categories found, return empty results
+        return { data: [], count: 0, page, pageSize };
+      }
     }
 
     // Apply verdict-based filter
@@ -692,10 +747,28 @@ export async function searchNews(
     .or(`title.ilike.${pattern},content.ilike.${pattern}`)
     .order("ingested_at", { ascending: false });
 
+  // Category filtering - filter by category_id directly
   if (categorySlug && categorySlug !== "all") {
-    q = q.eq("categories.slug", categorySlug);
+    const categoryId = await getCategoryIdBySlug(categorySlug);
+    if (categoryId !== null) {
+      q = q.eq("category_id", categoryId);
+    } else {
+      // If category not found, return empty results
+      return { data: [], count: 0 };
+    }
   } else if (categorySlugs && categorySlugs.length > 0) {
-    q = q.in("categories.slug", categorySlugs);
+    // Fetch all category IDs for multiple filters
+    const categoryIds = await Promise.all(
+      categorySlugs.map((slug) => getCategoryIdBySlug(slug))
+    );
+    // Filter out null values to avoid breaking the query
+    const validIds = categoryIds.filter((id) => id !== null);
+    if (validIds.length > 0) {
+      q = q.in("category_id", validIds);
+    } else {
+      // If no valid categories found, return empty results
+      return { data: [], count: 0 };
+    }
   }
 
   // Apply server-side verdict filter
