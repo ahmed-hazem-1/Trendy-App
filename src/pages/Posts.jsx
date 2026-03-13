@@ -19,6 +19,7 @@ import {
   Heart,
   Meh,
   Smile,
+  ChevronDown,
 } from "lucide-react";
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
@@ -32,6 +33,7 @@ import {
   useUserReaction,
   useReactToNews,
   useRemoveReaction,
+  useEvidenceItems,
 } from "../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../store/authSlice";
 
@@ -141,6 +143,7 @@ export default function Posts() {
   // For backward compatibility, context may have sidebarOpen or bottomSheetOpen
   const [activeCategory, setActiveCategory] = useState("all");
   const [shareOpen, setShareOpen] = useState(false);
+  const [sourcesOpen, setSourcesOpen] = useState(false);
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
@@ -148,6 +151,16 @@ export default function Posts() {
 
   const { data: rawPost, isLoading, isError } = useNewsItem(Number(id));
   const post = rawPost ? mapNewsItem(rawPost) : null;
+
+  // Debug logging
+  console.log("📄 Posts page - isPremium:", isPremium);
+  console.log("📄 Posts page - post:", post);
+  console.log("📄 Posts page - post.evidence:", post?.evidence);
+  console.log("📄 Posts page - filtered evidence count:", post?.evidence?.filter((ev) => ev.title || ev.snippet || ev.url).length);
+
+  // Evidence is fetched lazily — only when the sources dropdown is first opened
+  const { data: evidence = [], isFetching: evidenceFetching } =
+    useEvidenceItems(Number(id), sourcesOpen && isPremium);
 
   const { data: reactionCounts } = useReactionCounts(Number(id));
   const { data: userReaction } = useUserReaction(Number(id));
@@ -377,7 +390,7 @@ export default function Posts() {
               </div>
             )}
 
-            {/* ── Evidence / sources ── */}
+            {/* ── Evidence / sources (Collapsible) ── */}
             {!isPremium ? (
               <div className="px-4 sm:px-8 pb-6">
                 <div className="rounded-xl border-2 border-dashed border-amber-200 bg-amber-50 p-6 text-center">
@@ -397,53 +410,69 @@ export default function Posts() {
                 </div>
               </div>
             ) : (
-              post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length > 0 && (
-                <div className="px-4 sm:px-8 pb-6">
-                  <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+              <div className="px-4 sm:px-8 pb-6">
+                <button
+                  onClick={() => setSourcesOpen(!sourcesOpen)}
+                  className="flex items-center justify-between w-full text-sm font-bold text-gray-700 mb-3 hover:text-teal-600 transition cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-teal-500" />
-                    مصادر التحقق ({post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).length})
-                  </h3>
+                    مصادر التحقق
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${sourcesOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {sourcesOpen && (
                   <div className="space-y-3">
-                    {post.evidence.filter((ev) => ev.title || ev.snippet || ev.url).map((ev) => (
-                      <div
-                        key={ev.id}
-                        className="rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0 text-right">
-                            {ev.title && (
-                              <p className="text-sm font-semibold text-gray-800 mb-1 truncate">
-                                {ev.title}
-                              </p>
-                            )}
-                            {ev.snippet && (
-                              <p className="text-xs text-gray-500 leading-relaxed">
-                                {ev.snippet}
-                              </p>
-                            )}
-                            {ev.source_type && (
-                              <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">
-                                {ev.source_type}
-                              </span>
+                    {evidenceFetching ? (
+                      <div className="flex justify-center py-4">
+                        <Loader className="h-5 w-5 animate-spin text-teal-500" />
+                      </div>
+                    ) : evidence.filter((ev) => ev.title || ev.snippet || ev.url).length > 0 ? (
+                      evidence.filter((ev) => ev.title || ev.snippet || ev.url).map((ev) => (
+                        <div
+                          key={ev.id}
+                          className="rounded-lg border border-gray-100 bg-gray-50 p-3 sm:p-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0 text-right">
+                              {ev.title && (
+                                <p className="text-sm font-semibold text-gray-800 mb-1 truncate">
+                                  {ev.title}
+                                </p>
+                              )}
+                              {ev.snippet && (
+                                <p className="text-xs text-gray-500 leading-relaxed">
+                                  {ev.snippet}
+                                </p>
+                              )}
+                              {ev.source_type && (
+                                <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded px-1.5 py-0.5">
+                                  {ev.source_type}
+                                </span>
+                              )}
+                            </div>
+                            {ev.url && (
+                              <a
+                                href={ev.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 text-teal-500 hover:text-teal-700 transition"
+                                title="فتح المصدر"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
                             )}
                           </div>
-                          {ev.url && (
-                            <a
-                              href={ev.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 text-teal-500 hover:text-teal-700 transition"
-                              title="فتح المصدر"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500 text-center py-3">
+                        لا توجد مصادر متاحة
+                      </p>
+                    )}
                   </div>
-                </div>
-              )
+                )}
+              </div>
             )}
 
             {/* ── Verification log ── */}
