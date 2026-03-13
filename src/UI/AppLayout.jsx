@@ -3,6 +3,7 @@ import { useState } from "react";
 import NavBar from "./NavBar";
 import BottomNav from "./BottomNav";
 import MobileSidebar from "./MobileSidebar";
+import AdminModal from "./AdminModal";
 import OnboardingInterests from "./OnboardingInterests";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
@@ -10,6 +11,7 @@ import { updateUserProfile } from "../api/authApi";
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
   const { profile, refreshProfile, isAuthenticated } = useAuth();
   const [isOnboardingLoading, setIsOnboardingLoading] = useState(false);
   
@@ -17,6 +19,8 @@ export default function AppLayout() {
   const closeSidebar = () => setSidebarOpen(false);
   const openBottomSheet = () => setBottomSheetOpen(true);
   const closeBottomSheet = () => setBottomSheetOpen(false);
+  const openAdminModal = () => setAdminModalOpen(true);
+  const closeAdminModal = () => setAdminModalOpen(false);
 
   // Check if user needs onboarding (authenticated, has profile, but interests is empty)
   // We only show this if the profile has been loaded and explicitly has an empty/null interests field
@@ -47,7 +51,8 @@ export default function AppLayout() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <Outlet context={{ sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet, openBottomSheet }} />
       </main>
-      <BottomNav onCategoriesOpen={openBottomSheet} />
+      <BottomNav onCategoriesOpen={openBottomSheet} onAdminModalOpen={openAdminModal} />
+      <AdminModal isOpen={adminModalOpen} onClose={closeAdminModal} />
 
       {needsOnboarding && (
         <OnboardingInterests 

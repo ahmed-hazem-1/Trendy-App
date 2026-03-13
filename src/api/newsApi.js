@@ -198,18 +198,14 @@ export async function fetchNewsItems({
       .select(
         `
         id, title, content, verification_status, credibility_score,
-        ingested_at, published_at,
-        categories!inner (*)
+        ingested_at, published_at
       `,
         { count: "exact" },
       )
       .order("ingested_at", { ascending: false });
 
-    if (categorySlug && categorySlug !== "all") {
-      query = query.eq("categories.slug", categorySlug);
-    } else if (categorySlugs && categorySlugs.length > 0) {
-      query = query.in("categories.slug", categorySlugs);
-    }
+    // Note: Category filtering is handled at the app level for now
+    // until the news_categories relationship is properly configured in Supabase
 
     // Apply verdict-based filter
     if (verdictFilter) {
@@ -234,6 +230,8 @@ export async function fetchNewsItems({
       console.error("Failed to fetch news items:", error);
       throw error;
     }
+
+    console.log("✓ Fetched news items, count:", count);
 
     // Attach verdict details — reuse the already-fetched verdictMap when available
     const merged = await attachVerdicts(data, verdictMap);
@@ -263,33 +261,68 @@ export async function fetchEvidenceItems(newsItemId) {
  * Fetch a single news item by ID with all related data.
  */
 export async function fetchNewsItemById(id) {
-  const { data, error } = await supabase
-    .from("news_items")
-    .select(
-      `
-      *,
-      ingestion_sources (*),
-      news_categories (
-        *,
-        categories (*)
-      ),
-      evidence_items!evidence_items_news_id_fkey (*),
-      verification_log (*)
-    `,
-    )
-    .eq("id", id)
-    .single();
+  try {
+    console.log("Fetching news item by ID:", id);
+    
+    // Fetch basic news item data
+    const { data, error } = await supabase
+      .from("news_items")
+      .select(
+        `
+        id,
+        title,
+        content,
+        url,
+        verification_status,
+        credibility_score,
+        ingested_at,
+        published_at,
+        language
+      `,
+      )
+      .eq("id", id)
+      .single();
 
-  if (error) throw error;
+    if (error) {
+      console.error("Error fetching news item:", error);
+      throw error;
+    }
 
-  // Fetch verdict separately (no FK constraint)
-  const { data: verdictData } = await supabase
-    .from("verdicts")
-    .select("*")
-    .eq("news_id", id)
-    .maybeSingle();
+    console.log("✓ Fetched news item:", data);
 
-  return { ...data, verdicts: verdictData || null };
+    // Fetch verdict separately (no FK constraint)
+    const { data: verdictData } = await supabase
+      .from("verdicts")
+      .select("*")
+      .eq("news_id", id)
+      .maybeSingle();
+
+    // Fetch evidence items
+    const { data: evidenceData = [] } = await supabase
+      .from("evidence_items")
+      .select("*")
+      .eq("news_item_id", id);
+
+    console.log("✓ Fetched evidence items:", evidenceData);
+
+    // Fetch verification log
+    const { data: verificationLogData = [] } = await supabase
+      .from("verification_log")
+      .select("*")
+      .eq("news_item_id", id);
+
+    console.log("✓ Fetched verification log:", verificationLogData);
+
+    return {
+      ...data,
+      verdicts: verdictData || null,
+      evidence_items: evidenceData || [],
+      verification_log: verificationLogData || [],
+    };
+  } catch (err) {
+    console.error("fetchNewsItemById error:", err);
+    throw err;
+  }
 }
 
 /**
@@ -483,49 +516,80 @@ export async function fetchUserBookmark(newsItemId, userId) {
  * Toggle bookmark for a news item.
  */
 export async function toggleBookmark({ newsItemId, userId, note }) {
-  const existing = await fetchUserBookmark(newsItemId, userId);
+  try {
+    const existing = await fetchUserBookmark(newsItemId, userId);
+    console.log("Existing bookmark:", existing);
 
-  if (existing) {
-    const { error } = await supabase
+    if (existing) {
+      console.log("Deleting bookmark with ID:", existing.id);
+      const { error } = await supabase
+        .from("user_bookmarks")
+        .delete()
+        .eq("id", existing.id);
+      if (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
+      console.log("✓ Bookmark deleted successfully");
+      return null; // removed
+    }
+
+    console.log("Adding new bookmark for newsItemId:", newsItemId, "userId:", userId);
+    const { data, error } = await supabase
       .from("user_bookmarks")
-      .delete()
-      .eq("id", existing.id);
-    if (error) throw error;
-    return null; // removed
+      .insert({ news_item_id: newsItemId, user_id: userId, note })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Insert error:", error);
+      throw error;
+    }
+    console.log("✓ Bookmark added successfully:", data);
+    return data; // added
+  } catch (err) {
+    console.error("toggleBookmark error:", err);
+    throw err;
   }
-
-  const { data, error } = await supabase
-    .from("user_bookmarks")
-    .insert({ news_item_id: newsItemId, user_id: userId, note })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data; // added
 }
 
 /**
  * Fetch all bookmarks for a user.
  */
 export async function fetchUserBookmarks(userId) {
-  const { data, error } = await supabase
-    .from("user_bookmarks")
-    .select(
-      `
-      *,
-      news_items (
-        id, title, verification_status, credibility_score, ingested_at,
-        news_categories (
-          categories (name, slug)
+  try {
+    console.log("Fetching bookmarks for userId:", userId);
+    const { data, error } = await supabase
+      .from("user_bookmarks")
+      .select(
+        `
+        id,
+        note,
+        saved_at,
+        news_items (
+          id, 
+          title, 
+          content,
+          verification_status, 
+          credibility_score, 
+          ingested_at,
+          published_at
         )
+      `,
       )
-    `,
-    )
-    .eq("user_id", userId)
-    .order("saved_at", { ascending: false });
+      .eq("user_id", userId)
+      .order("saved_at", { ascending: false });
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      console.error("Error fetching bookmarks:", error);
+      throw error;
+    }
+    console.log("✓ Fetched bookmarks:", data);
+    return data;
+  } catch (err) {
+    console.error("fetchUserBookmarks error:", err);
+    throw err;
+  }
 }
 
 // ─────────────────────────────────────────────

@@ -3,17 +3,21 @@ import { NavLink, Outlet } from 'react-router-dom';
 import NavBar from './NavBar';
 import BottomNav from './BottomNav';
 import MobileSidebar from './MobileSidebar';
+import AdminModal from './AdminModal';
 import ProfileCard from './ProfileCard';
 import { ShieldAlert, Layers, Megaphone, Users } from 'lucide-react';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
   
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
   const openBottomSheet = () => setBottomSheetOpen(true);
   const closeBottomSheet = () => setBottomSheetOpen(false);
+  const openAdminModal = () => setAdminModalOpen(true);
+  const closeAdminModal = () => setAdminModalOpen(false);
 
   const navItems = [
     { label: 'المصادر والتصنيفات', path: '/admin/sources', icon: Layers },
@@ -85,7 +89,8 @@ export default function AdminLayout() {
         </div>
       </main>
 
-      <BottomNav onCategoriesOpen={openBottomSheet} />
+      <BottomNav onCategoriesOpen={openBottomSheet} onAdminModalOpen={openAdminModal} />
+      <AdminModal isOpen={adminModalOpen} onClose={closeAdminModal} />
       
       <MobileSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
     </div>

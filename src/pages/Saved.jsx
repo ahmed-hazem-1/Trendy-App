@@ -15,12 +15,15 @@ export default function Saved() {
   const { sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet } = useOutletContext();
   const { profile } = useAuth();
   const isPremium = useSelector(selectIsPremium);
-  const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
+  const { data: bookmarks = [], isLoading: bookmarksLoading, isFetching: bookmarksFetching } = useUserBookmarks();
   const toggleBookmarkMutation = useToggleBookmark();
   const [activeCategory, setActiveCategory] = useState("all");
 
   const handleRemoveBookmark = async (newsId) => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      console.warn("Cannot remove bookmark: user not authenticated");
+      return;
+    }
     try {
       await toggleBookmarkMutation.mutateAsync({
         newsItemId: newsId,
@@ -28,6 +31,7 @@ export default function Saved() {
       });
     } catch (error) {
       console.error("Failed to remove bookmark:", error);
+      alert("حدث خطأ أثناء إزالة الخبر من المحفوظات");
     }
   };
 
@@ -109,7 +113,7 @@ export default function Saved() {
                   return (
                     <div
                       key={bookmark.id}
-                      className="rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-teal-200 hover:p-4 transition group/card"
+                      className="rounded-xl border border-gray-100 bg-gray-50/30 p-4 hover:bg-white hover:border-teal-200 transition group/card"
                     >
                       <div className="flex items-start gap-4">
                         <div className="flex-1 min-w-0">

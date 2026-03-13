@@ -344,7 +344,8 @@ export function useUserBookmarks() {
     queryKey: ["userBookmarks", profile?.id],
     queryFn: () => fetchUserBookmarks(profile.id),
     enabled: !!profile?.id,
-    staleTime: 1000 * 5, // 5 seconds for faster updates
+    staleTime: 0, // Treat as stale immediately so refetch happens quickly
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes (was cacheTime)
   });
 }
 
@@ -354,48 +355,52 @@ export function useToggleBookmark() {
   return useMutation({
     mutationFn: toggleBookmark,
     onMutate: async ({ newsItemId, userId }) => {
+      console.log("🔄 Bookmark mutation started for newsItemId:", newsItemId, "userId:", userId);
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["userBookmark", newsItemId] });
-      await queryClient.cancelQueries({ queryKey: ["userBookmarks"] });
+      await queryClient.cancelQueries({ queryKey: ["userBookmark", newsItemId, userId] });
+      await queryClient.cancelQueries({ queryKey: ["userBookmarks", userId] });
 
       // Snapshot the previous values
       const previousBookmark = queryClient.getQueryData(["userBookmark", newsItemId, userId]);
       const previousBookmarks = queryClient.getQueryData(["userBookmarks", userId]);
 
-      // Optimistically update individual bookmark
-      queryClient.setQueryData(["userBookmark", newsItemId, userId], (old) => {
-        return old ? null : { news_item_id: newsItemId, user_id: userId };
-      });
+      // Determine if currently bookmarked
+      const isCurrentlyBookmarked = !!previousBookmark;
+      console.log("Current bookmark state:", isCurrentlyBookmarked ? "bookmarked" : "not bookmarked");
 
-      // Optimistically update bookmarks list
-      queryClient.setQueryData(["userBookmarks", userId], (old) => {
-        if (!old) return old;
-        const isCurrentlyBookmarked = old.some(b => b.news_item_id === newsItemId);
+      // Optimistically update individual bookmark state
+      queryClient.setQueryData(["userBookmark", newsItemId, userId], (old) => {
         if (isCurrentlyBookmarked) {
-          return old.filter(b => b.news_item_id !== newsItemId);
+          return null; // Remove
         } else {
-          return [...old, { news_item_id: newsItemId, user_id: userId, saved_at: new Date().toISOString() }];
+          return { id: Math.random(), news_item_id: newsItemId, user_id: userId, saved_at: new Date().toISOString() };
         }
       });
 
-      return { previousBookmark, previousBookmarks };
+      // NOTE: We don't update the bookmarks list here because we don't have the full nested data
+      // It will be refetched after onSuccess
+
+      return { previousBookmark, previousBookmarks, isCurrentlyBookmarked };
     },
     onError: (err, variables, context) => {
+      console.error("❌ Bookmark toggle failed:", err);
       // Rollback on error
       if (context?.previousBookmark !== undefined) {
         queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], context.previousBookmark);
       }
-      if (context?.previousBookmarks) {
+      if (context?.previousBookmarks !== undefined) {
         queryClient.setQueryData(["userBookmarks", variables.userId], context.previousBookmarks);
       }
     },
     onSuccess: (data, variables) => {
-      // Update with server response but don't invalidate to keep it instant
-      if (data) {
-        const isBookmarked = !!data;
-        queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], isBookmarked ? data : null);
-      }
-      // No invalidation - optimistic update is already correct
+      console.log("✅ Bookmark mutation succeeded. Data:", data);
+      // Update with server response for individual bookmark
+      queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], data);
+      
+      // Invalidate and refetch the full bookmarks list to ensure consistency with server
+      // This will fetch the complete nested data structure with news_items
+      console.log("🔄 Invalidating userBookmarks cache for userId:", variables.userId);
+      queryClient.invalidateQueries({ queryKey: ["userBookmarks", variables.userId] });
     },
   });
 }

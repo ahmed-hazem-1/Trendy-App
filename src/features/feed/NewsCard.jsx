@@ -104,11 +104,29 @@ function NewsCard({
   }
 
   function handleBookmark() {
-    if (!profile?.id) return; // must be logged in
-    toggleBookmarkMutation.mutate({
-      newsItemId: item.id,
-      userId: profile.id,
-    });
+    if (!profile?.id) {
+      console.warn("Cannot bookmark: user not authenticated");
+      return; // must be logged in
+    }
+    console.log("Bookmarking news item:", item.id, "for user:", profile.id);
+    toggleBookmarkMutation.mutate(
+      {
+        newsItemId: item.id,
+        userId: profile.id,
+      },
+      {
+        onError: (error) => {
+          console.error("Bookmark mutation failed:", error);
+        },
+        onSuccess: (data) => {
+          if (data) {
+            console.log("✓ Bookmark added successfully:", data);
+          } else {
+            console.log("✓ Bookmark removed successfully");
+          }
+        },
+      }
+    );
   }
 
   // Build a shareable URL for this post
