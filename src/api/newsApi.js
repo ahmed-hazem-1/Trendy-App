@@ -186,17 +186,12 @@ export async function fetchNewsItems({
   pageSize = 10,
   verificationStatus,
   categorySlug,
+  categorySlugs,
 } = {}) {
   try {
     // Pre-fetch verdict IDs for filtering (PRD §9.4)
     const { filter: verdictFilter, verdictMap } =
       await prefetchVerdicts(verificationStatus);
-
-    // When filtering by category, use !inner joins so rows without that category are excluded
-    const hasCategoryFilter = categorySlug && categorySlug !== "all";
-    const newsCategories = hasCategoryFilter
-      ? "news_categories!inner ( *, categories!inner (*) )"
-      : "news_categories ( *, categories (*) )";
 
     let query = supabase
       .from("news_items")
@@ -204,14 +199,16 @@ export async function fetchNewsItems({
         `
         id, title, content, verification_status, credibility_score,
         ingested_at, published_at,
-        ${newsCategories}
+        categories!inner (*)
       `,
         { count: "exact" },
       )
       .order("ingested_at", { ascending: false });
 
-    if (hasCategoryFilter) {
-      query = query.eq("news_categories.categories.slug", categorySlug);
+    if (categorySlug && categorySlug !== "all") {
+      query = query.eq("categories.slug", categorySlug);
+    } else if (categorySlugs && categorySlugs.length > 0) {
+      query = query.in("categories.slug", categorySlugs);
     }
 
     // Apply verdict-based filter
@@ -304,9 +301,7 @@ export async function fetchTrendingNews(limit = 5) {
     .select(
       `
       id, title, verification_status, credibility_score, ingested_at,
-      news_categories (
-        categories (name, slug)
-      )
+      categories (name, slug)
     `,
     )
     .eq("is_trending", true)
@@ -605,7 +600,7 @@ export async function markAllNotificationsRead(userId) {
  */
 export async function searchNews(
   query,
-  { limit = 20, verificationStatus, categorySlug } = {},
+  { limit = 20, verificationStatus, categorySlug, categorySlugs } = {},
 ) {
   // Targeted verdict fetch for search filtering
   const { filter: verdictFilter, verdictMap } =
@@ -615,26 +610,23 @@ export async function searchNews(
   const escaped = query.replace(/"/g, '""');
   const pattern = `"%${escaped}%"`;
 
-  const hasCategoryFilter = categorySlug && categorySlug !== "all";
-  const newsCategories = hasCategoryFilter
-    ? "news_categories!inner ( *, categories!inner (*) )"
-    : "news_categories ( *, categories (*) )";
-
   let q = supabase
     .from("news_items")
     .select(
       `
       id, title, content, verification_status, credibility_score,
       ingested_at, published_at,
-      ${newsCategories},
+      categories!inner (*),
       evidence_items!evidence_items_news_id_fkey (id, url, title, snippet, source_type)
     `,
     )
     .or(`title.ilike.${pattern},content.ilike.${pattern}`)
     .order("ingested_at", { ascending: false });
 
-  if (hasCategoryFilter) {
-    q = q.eq("news_categories.categories.slug", categorySlug);
+  if (categorySlug && categorySlug !== "all") {
+    q = q.eq("categories.slug", categorySlug);
+  } else if (categorySlugs && categorySlugs.length > 0) {
+    q = q.in("categories.slug", categorySlugs);
   }
 
   // Apply server-side verdict filter

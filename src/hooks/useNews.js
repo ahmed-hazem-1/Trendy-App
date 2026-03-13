@@ -42,6 +42,7 @@ export function useNewsItems({
   pageSize = 5,
   verificationStatus,
   categorySlug,
+  categorySlugs, // Now supporting multiple categories
   searchTerm = "",
 } = {}) {
   const trimmed = searchTerm.trim();
@@ -49,20 +50,22 @@ export function useNewsItems({
 
   return useInfiniteQuery({
     queryKey: isSearching
-      ? ["newsItems", "search", trimmed, { verificationStatus, categorySlug }]
-      : ["newsItems", { pageSize, verificationStatus, categorySlug }],
+      ? ["newsItems", "search", trimmed, { verificationStatus, categorySlug, categorySlugs }]
+      : ["newsItems", { pageSize, verificationStatus, categorySlug, categorySlugs }],
     queryFn: ({ pageParam = 1 }) =>
       isSearching
         ? searchNews(trimmed, {
             limit: pageSize,
             verificationStatus,
             categorySlug,
+            categorySlugs,
           })
         : fetchNewsItems({
             page: pageParam,
             pageSize,
             verificationStatus,
             categorySlug,
+            categorySlugs,
           }),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {

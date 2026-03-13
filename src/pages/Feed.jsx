@@ -4,6 +4,7 @@ import {
   useSearchParams,
   useNavigate,
 } from "react-router-dom";
+import { useSelector } from "react-redux";
 import FilterTabs from "../features/feed/FilterTabs";
 import NewsCard from "../features/feed/NewsCard";
 import UserSidebar from "../features/feed/UserSidebar";
@@ -17,12 +18,10 @@ import {
   useBatchUserReactions,
 } from "../hooks/useNews";
 import { Loader } from "lucide-react";
+import { selectProfile } from "../store/authSlice";
 
-/**
- * Helper to transform a Supabase news_items row into the shape the UI expects.
- */
 function mapNewsItem(item) {
-  const category = item.news_categories?.[0]?.categories?.name || "عام";
+  const category = item.categories?.name || "عام";
   // verdicts comes as an object (unique FK) or array; normalise
   const verdict = Array.isArray(item.verdicts)
     ? (item.verdicts[0] ?? null)
@@ -59,6 +58,7 @@ function formatTimeAgo(dateStr) {
 export default function Feed() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const profile = useSelector(selectProfile);
   const searchTerm = searchParams.get("q") || "";
   const activeFilter = searchParams.get("filter") || "ALL";
   const activeCategory = searchParams.get("category") || "all";
@@ -92,6 +92,13 @@ export default function Feed() {
     navigate("?" + next.toString(), { replace: true });
   };
 
+  // If no category is selected and user has interests, use them
+  const categorySlugs = useMemo(() => {
+    if (activeCategory !== "all") return [];
+    if (profile?.interests?.length > 0) return profile.interests;
+    return [];
+  }, [activeCategory, profile?.interests]);
+
   const {
     data: newsData,
     isLoading: newsLoading,
@@ -106,6 +113,7 @@ export default function Feed() {
     pageSize: 5,
     verificationStatus: activeFilter,
     categorySlug: activeCategory,
+    categorySlugs,
     searchTerm,
   });
 
