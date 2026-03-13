@@ -54,7 +54,7 @@ function NewsCard({
   reactionCounts: batchCounts,
   userReaction: batchUserReaction,
 }) {
-  const [insightOpen, setInsightOpen] = useState(true);
+  const [insightOpen, setInsightOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -186,23 +186,29 @@ function NewsCard({
           <div className="px-3 sm:px-5 mb-3 sm:mb-4">
             <button
               onClick={() => setInsightOpen(!insightOpen)}
-              className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-semibold text-gray-500 mb-2 ms-auto cursor-pointer hover:text-purple-600 transition"
+              className={`flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold mb-2 ms-auto cursor-pointer transition-all duration-300 ${
+                !insightOpen ? "animate-text-glow scale-105" : "text-gray-500 hover:text-purple-600"
+              }`}
             >
               تحليل التحقق بالذكاء الاصطناعي
-              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-500" />
+              <Sparkles className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${!insightOpen ? "text-purple-600 fill-purple-100/50" : "text-purple-500"}`} />
             </button>
 
             {insightOpen && (
-              <>
-                <div className="relative rounded-xl p-3 sm:p-4 mb-3 border border-purple-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
-                  {/* Glass Gradient Background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/80 via-purple-100/80 to-pink-100/80 backdrop-blur-md -z-10" />
+              <div className="animate-fade-in-down origin-top">
+                <div className="relative rounded-2xl p-4 sm:p-5 mb-4 border border-[#a3cfff]/80 shadow-[0_8px_30px_rgb(163,207,255,0.2)] overflow-hidden group/insight animate-neon-glow">
+                  {/* Deep Vibrant Gradient Base (Reduced transparency to prevent "wash out") */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/40 via-[#e0f7ff]/40 to-[#99d7ff]/40 backdrop-blur-md -z-10 transition-transform duration-500 group-hover/insight:scale-105" />
                   
-                  <div className="flex items-start gap-2 sm:gap-3 relative z-10">
-                    <div className="bg-white/50 p-1.5 sm:p-2 rounded-lg shadow-sm border border-white/50 shrink-0 mt-0.5">
-                      <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                  {/* Large Inner Glows for the "Cloud" effect from your image */}
+                  <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-[#a3cfff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
+                  <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-[#99d7ff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
+                  
+                  <div className="flex items-start gap-3 sm:gap-4 relative z-10">
+                    <div className="bg-white/60 p-2 sm:p-2.5 rounded-2xl shadow-sm border border-white/40 shrink-0 mt-0.5 rotation-slow">
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 fill-blue-100/50" />
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-medium text-right">
+                    <p className="text-xs sm:text-sm text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm">
                       &ldquo;{item.reasoning}&rdquo;
                     </p>
                   </div>
@@ -298,7 +304,7 @@ function NewsCard({
                     </Link>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         )}

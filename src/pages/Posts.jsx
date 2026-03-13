@@ -355,20 +355,25 @@ export default function Posts() {
 
             {/* ── Reasoning (AI Insights) ── */}
             {post.reasoning && (
-              <div className="px-4 sm:px-8 pb-6">
-                <div className="relative rounded-2xl p-5 sm:p-6 border border-purple-100 shadow-[0_4px_24px_rgba(0,0,0,0.03)] overflow-hidden">
-                  {/* Glass Gradient Background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-100/80 via-purple-100/80 to-pink-100/80 backdrop-blur-md -z-10" />
+              <div className="px-4 sm:px-8 pb-6 group/insight">
+                <div className="relative rounded-3xl p-6 sm:p-8 border border-[#a3cfff]/50 shadow-[0_10px_40px_rgba(163,207,255,0.25)] overflow-hidden transition-all duration-500">
+                  {/* Deep Vibrant Gradient Base matching your reference image */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/50 via-[#e0f7ff]/50 to-[#99d7ff]/50 backdrop-blur-2xl -z-10 transition-transform duration-700 group-hover/insight:scale-105" />
                   
-                  <div className="flex items-start gap-3 sm:gap-4 relative z-10">
-                    <div className="bg-white/50 p-2 sm:p-2.5 rounded-xl shadow-sm border border-white/50 shrink-0">
-                      <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                  {/* Large Inner Glows for the soft cloud-like background bubbles */}
+                  <div className="absolute top-[-25%] right-[-15%] w-64 h-64 bg-[#a3cfff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
+                  <div className="absolute bottom-[-25%] left-[-15%] w-64 h-64 bg-[#99d7ff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
+                  
+                  <div className="flex items-start gap-4 sm:gap-6 relative z-10">
+                    <div className="bg-white/70 p-3 sm:p-4 rounded-2xl shadow-md border border-white/50 shrink-0 rotation-slow">
+                      <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 fill-blue-100/50" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 mb-2 sm:mb-2.5 text-sm sm:text-base">
+                      <h3 className="font-extrabold text-[#1e3a8a] mb-2 sm:mb-3 text-sm sm:text-lg tracking-tight flex items-center gap-2">
                         تحليل التحقق بالذكاء الاصطناعي
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
                       </h3>
-                      <p className="text-gray-800 leading-relaxed text-xs sm:text-sm font-medium text-right">
+                      <p className="text-[#172554] leading-relaxed text-xs sm:text-base font-bold text-right drop-shadow-sm">
                         &ldquo;{post.reasoning}&rdquo;
                       </p>
                     </div>
