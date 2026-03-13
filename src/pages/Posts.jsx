@@ -10,9 +10,6 @@ import {
   ShieldCheck,
   Clock,
   Tag,
-  ThumbsUp,
-  Smile,
-  PartyPopper,
   Info,
   CheckCircle2,
   XCircle,
@@ -88,22 +85,19 @@ function mapNewsItem(item) {
 
 const REACTION_CONFIG = [
   {
-    type: "EXCITED",
-    icon: ThumbsUp,
-    label: "متحمس",
-    activeColor: "text-teal-500",
+    type: "SURPRISED",
+    emoji: "😲",
+    label: "مفاجأ",
+  },
+  {
+    type: "LOVED_IT",
+    emoji: "❤️",
+    label: "أحببت",
   },
   {
     type: "NEUTRAL",
-    icon: Smile,
+    emoji: "😐",
     label: "محايد",
-    activeColor: "text-blue-500",
-  },
-  {
-    type: "SKEPTICAL",
-    icon: PartyPopper,
-    label: "متشكك",
-    activeColor: "text-amber-500",
   },
 ];
 
@@ -155,10 +149,9 @@ export default function Posts() {
   const removeMutation = useRemoveReaction();
 
   const counts = reactionCounts || {
-    EXCITED: 0,
+    SURPRISED: 0,
+    LOVED_IT: 0,
     NEUTRAL: 0,
-    SKEPTICAL: 0,
-    ANGRY: 0,
   };
   const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -545,7 +538,7 @@ export default function Posts() {
               ) : (
                 <div className="flex items-center gap-4">
                   {REACTION_CONFIG.map(
-                    ({ type, icon: Icon, label, activeColor }) => {
+                    ({ type, emoji, label }) => {
                       const isActive = userReaction?.reaction_type === type;
                       return (
                         <button
@@ -554,12 +547,12 @@ export default function Posts() {
                           title={label}
                           className={`flex items-center gap-1.5 text-sm cursor-pointer transition ${
                             isActive
-                              ? activeColor
-                              : "text-gray-400 hover:text-gray-600"
+                              ? "text-base"
+                              : "opacity-50 hover:opacity-75"
                           }`}
                         >
-                          <Icon className="h-5 w-5" />
-                          <span className="text-xs">{label}</span>
+                          <span className={isActive ? "text-2xl" : "text-lg"}>{emoji}</span>
+                          <span className={isActive ? "block" : "hidden"}>{label}</span>
                           {counts[type] > 0 && (
                             <span className="text-xs font-medium">
                               {counts[type]}

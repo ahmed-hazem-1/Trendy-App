@@ -148,7 +148,7 @@ export function useBatchReactionCounts(newsItemIds = []) {
     queryKey: ["batchReactionCounts", stableKey],
     queryFn: () => fetchBatchReactionCounts(newsItemIds),
     enabled: newsItemIds.length > 0,
-    staleTime: 1000 * 10, // 10 seconds - reduced for faster initial loads
+    staleTime: 1000 * 60 * 5, // 5 minutes - match user reaction staleTime for consistency
   });
 
   // Seed individual per-item caches so old items read from cache on next scroll
@@ -175,7 +175,7 @@ export function useBatchUserReactions(newsItemIds = []) {
     queryKey: ["batchUserReactions", stableKey, profile?.id],
     queryFn: () => fetchBatchUserReactions(newsItemIds, profile.id),
     enabled: newsItemIds.length > 0 && !!profile?.id,
-    staleTime: 1000 * 10, // 10 seconds - reduced for faster initial loads
+    staleTime: 1000 * 60 * 5, // 5 minutes - match batch reaction counts for consistency
   });
 
   // Seed individual per-item user-reaction caches
@@ -211,7 +211,7 @@ export function useUserReaction(newsItemId) {
     queryKey: ["userReaction", newsItemId, profile?.id],
     queryFn: () => fetchUserReaction(newsItemId, profile.id),
     enabled: !!newsItemId && !!profile?.id,
-    staleTime: 1000 * 5, // 5 seconds for faster updates
+    staleTime: 1000 * 60 * 5, // 5 minutes - reactions rarely change
   });
 }
 
@@ -267,7 +267,8 @@ export function useReactToNews() {
       if (data) {
         queryClient.setQueryData(["userReaction", variables.newsItemId, variables.userId], data);
       }
-      // No invalidation - optimistic update is already correct
+      // Invalidate batch cache so the update is reflected in feed
+      queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
     },
   });
 }
@@ -310,8 +311,8 @@ export function useRemoveReaction() {
       }
     },
     onSuccess: () => {
-      // No invalidation - optimistic update is already correct
-      // The removed state is already set to null in onMutate
+      // Invalidate batch cache so the update is reflected in feed
+      queryClient.invalidateQueries({ queryKey: ["batchReactionCounts"] });
     },
   });
 }

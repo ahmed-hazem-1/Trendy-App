@@ -1,8 +1,5 @@
 import {
   Share2,
-  PartyPopper,
-  ThumbsUp,
-  Smile,
   Sparkles,
   Info,
   ExternalLink,
@@ -30,22 +27,19 @@ import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/au
 
 const REACTION_CONFIG = [
   {
-    type: "EXCITED",
-    icon: ThumbsUp,
-    label: "متحمس",
-    activeColor: "text-teal-500",
+    type: "SURPRISED",
+    emoji: "😲",
+    label: "مفاجأ",
+  },
+  {
+    type: "LOVED_IT",
+    emoji: "❤️",
+    label: "أحببت",
   },
   {
     type: "NEUTRAL",
-    icon: Smile,
+    emoji: "😐",
     label: "محايد",
-    activeColor: "text-blue-500",
-  },
-  {
-    type: "SKEPTICAL",
-    icon: PartyPopper,
-    label: "متشكك",
-    activeColor: "text-amber-500",
   },
 ];
 
@@ -87,10 +81,9 @@ function NewsCard({
   const toggleBookmarkMutation = useToggleBookmark();
 
   const counts = reactionCounts || {
-    EXCITED: 0,
+    SURPRISED: 0,
+    LOVED_IT: 0,
     NEUTRAL: 0,
-    SKEPTICAL: 0,
-    ANGRY: 0,
   };
   const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -326,7 +319,7 @@ function NewsCard({
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               {REACTION_CONFIG.map(
-                ({ type, icon: Icon, label, activeColor }) => {
+                ({ type, emoji, label }) => {
                   const isActive = userReaction?.reaction_type === type;
                   return (
                     <button
@@ -335,11 +328,11 @@ function NewsCard({
                       title={label}
                       className={`flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm cursor-pointer transition ${
                         isActive
-                          ? activeColor
-                          : "text-gray-400 hover:text-gray-600"
+                          ? "text-sm sm:text-base"
+                          : "text-xs sm:text-sm opacity-50 hover:opacity-75"
                       }`}
                     >
-                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className={isActive ? "text-lg sm:text-xl" : "text-base sm:text-lg"}>{emoji}</span>
                       {counts[type] > 0 && <span className="text-[10px] sm:text-xs">{counts[type]}</span>}
                     </button>
                   );

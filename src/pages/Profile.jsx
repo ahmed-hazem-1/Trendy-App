@@ -174,7 +174,13 @@ export default function Profile() {
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
+      <div 
+        className={
+          isPremium 
+            ? "max-w-3xl mx-auto" 
+            : "grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto"
+        }
+      >
         {/* Right ads sidebar — all 4 ads at lg, only first 2 at xl */}
         {!isPremium && (
           <aside className="hidden lg:block sticky top-24 self-start space-y-4">

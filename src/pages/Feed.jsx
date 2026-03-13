@@ -127,15 +127,15 @@ export default function Feed() {
   // Only batch-fetch reactions for the most recently loaded page.
   // The batch hooks seed individual per-item caches after each fetch, so
   // previously loaded items read from cache with zero extra network requests.
-  const lastPageIds = useMemo(() => {
+  const allPageIds = useMemo(() => {
     const pages = newsData?.pages;
     if (!pages?.length) return [];
-    const lastPage = pages[pages.length - 1];
-    return (lastPage?.data || []).map((item) => item.id);
+    // Fetch reactions for ALL currently displayed items, not just the last page
+    return pages.flatMap((page) => (page?.data || []).map((item) => item.id));
   }, [newsData]); // newsData ref is replaced on every page addition
 
-  const { data: batchReactionCounts } = useBatchReactionCounts(lastPageIds);
-  const { data: batchUserReactions } = useBatchUserReactions(lastPageIds);
+  const { data: batchReactionCounts } = useBatchReactionCounts(allPageIds);
+  const { data: batchUserReactions } = useBatchUserReactions(allPageIds);
 
   // ── Infinite-scroll observer ──
   // Store latest fetch-more logic in a ref so the observer callback never
