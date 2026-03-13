@@ -38,13 +38,15 @@ export default function SignUp() {
         email: data.email,
         password: data.password,
         fullName: data.fullName,
-        phone: `+20${data.phone}`,
+        phone: data.phone,
         location: data.location,
+        interests: [], // Set to empty initially to trigger onboarding modal after login
       });
 
-      // Always require email confirmation before first login
+      // After successful signup, redirect to login so they can authenticate
+      // and then see the onboarding interests modal
       setSuccessMsg(
-        "تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل الدخول.",
+        "تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل الدخول لتخصيص اهتماماتك.",
       );
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {

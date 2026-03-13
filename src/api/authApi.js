@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient";
  * Sign up a new user with email/password and profile metadata.
  * After Supabase Auth signup, inserts a row into the public.users table.
  */
-export async function signUp({ email, password, fullName, phone, location }) {
+export async function signUp({ email, password, fullName, phone, location, interests = [] }) {
   // 1. Create auth user
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
@@ -15,6 +15,7 @@ export async function signUp({ email, password, fullName, phone, location }) {
         display_name: fullName,
         phone,
         location,
+        interests,
       },
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
@@ -33,6 +34,8 @@ export async function signUp({ email, password, fullName, phone, location }) {
         full_name: fullName,
         display_name: fullName,
         location,
+        phone,
+        interests,
         role: "USER",
         status: "PENDING_VERIFICATION",
         language: "ar",

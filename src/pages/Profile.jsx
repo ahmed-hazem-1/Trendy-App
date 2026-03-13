@@ -12,6 +12,16 @@ import {
   Bookmark,
   Trash2,
   ExternalLink,
+  Laptop,
+  Scale,
+  Trophy,
+  Users,
+  LineChart,
+  Stethoscope,
+  Microscope,
+  Clapperboard,
+  GraduationCap,
+  Leaf,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
@@ -32,16 +42,16 @@ import { Link } from "react-router-dom";
 import { selectIsPremium } from "../store/authSlice";
 
 const INTEREST_OPTIONS = [
-  { key: "technology", label: "تكنولوجيا", emoji: "💻" },
-  { key: "politics", label: "سياسة", emoji: "🏛️" },
-  { key: "sports", label: "رياضة", emoji: "⚽" },
-  { key: "social", label: "مجتمع", emoji: "👥" },
-  { key: "economy", label: "اقتصاد", emoji: "📈" },
-  { key: "health", label: "صحة", emoji: "🏥" },
-  { key: "science", label: "علوم", emoji: "🔬" },
-  { key: "entertainment", label: "ترفيه", emoji: "🎬" },
-  { key: "education", label: "تعليم", emoji: "📚" },
-  { key: "environment", label: "بيئة", emoji: "🌍" },
+  { key: "technology", label: "تكنولوجيا", Icon: Laptop },
+  { key: "politics", label: "سياسة", Icon: Scale },
+  { key: "sports", label: "رياضة", Icon: Trophy },
+  { key: "social", label: "مجتمع", Icon: Users },
+  { key: "economy", label: "اقتصاد", Icon: LineChart },
+  { key: "health", label: "صحة", Icon: Stethoscope },
+  { key: "science", label: "علوم", Icon: Microscope },
+  { key: "entertainment", label: "ترفيه", Icon: Clapperboard },
+  { key: "education", label: "تعليم", Icon: GraduationCap },
+  { key: "environment", label: "بيئة", Icon: Leaf },
 ];
 
 // Mock user data — replace with real data from Supabase
@@ -73,7 +83,7 @@ export default function Profile() {
         phone: profile.phone || "",
         location: profile.location || "",
         bio: profile.bio || "",
-        interests: [],
+        interests: profile.interests || [],
         avatar: profile.avatar_url || "/logo/Trendy-logo-no-text.png",
       }
     : FALLBACK_USER;
@@ -81,6 +91,7 @@ export default function Profile() {
   const [interests, setInterests] = useState(userData.interests);
   const [bio, setBio] = useState(userData.bio);
   const [editingBio, setEditingBio] = useState(false);
+  const [isSavingInterests, setIsSavingInterests] = useState(false);
 
   const {
     register,
@@ -107,6 +118,7 @@ export default function Profile() {
         location: profile.location || "",
       });
       setBio(profile.bio || "");
+      setInterests(profile.interests || []);
     }
   }, [profile, reset]);
 
@@ -139,6 +151,23 @@ export default function Profile() {
     setInterests((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     );
+  }
+
+  async function handleInterestsSave() {
+    if (!profile?.id) return;
+    setIsSavingInterests(true);
+    try {
+      console.log("Saving interests to DB:", interests);
+      await updateUserProfile(profile.id, { interests });
+      console.log("Interests saved, refreshing profile...");
+      await refreshProfile();
+      console.log("Profile refreshed successfully");
+    } catch (err) {
+      console.error("Interests update error:", err);
+      alert("حدث خطأ أثناء حفظ الاهتمامات: " + err.message);
+    } finally {
+      setIsSavingInterests(false);
+    }
   }
 
   async function handleBioSave() {
@@ -206,121 +235,63 @@ export default function Profile() {
         <section className="min-w-0 space-y-5">
           {/* Premium banner on mobile */}
           <PremiumBanner />
-          {/* ── Profile Header Card ── */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            {/* Banner */}
-            <div className="h-28 sm:h-36 lg:h-44 bg-linear-to-r from-teal-500 to-emerald-400 relative">
-              <button className="absolute bottom-3 left-3 sm:left-4 p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition cursor-pointer backdrop-blur-sm">
-                <Camera className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Avatar */}
-            <div className="flex justify-center -mt-14 sm:-mt-16">
-              <div className="relative">
-                <img
-                  src={userData.avatar}
-                  alt={userData.fullName}
-                  className="h-28 w-28 sm:h-32 sm:w-32 rounded-full object-cover ring-4 ring-white shadow-lg"
-                />
-                <button className="absolute bottom-1 right-1 p-1.5 rounded-full bg-teal-500 text-white hover:bg-teal-600 transition cursor-pointer shadow-md">
-                  <Camera className="h-3.5 w-3.5" />
-                </button>
+          
+          {/* ── Profile Header Card (Revised: No Banner/Avatar) ── */}
+          <div className="rounded-xl border border-gray-200 bg-linear-to-r from-teal-600 to-emerald-500 shadow-sm p-6 sm:p-8 text-white relative overflow-hidden">
+            {/* Background design elements */}
+            <div className="absolute top-[-20%] right-[-5%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-[-20%] left-[-5%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2 opacity-90 text-teal-50">
+                <span className="text-lg sm:text-xl font-medium">مرحباً بك،</span>
               </div>
-            </div>
-
-            {/* Name & subtitle */}
-            <div className="text-center px-4 sm:px-6 pt-3 pb-5 sm:pb-6">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-3">
                 {userData.fullName}
+                <span className="text-3xl animate-bounce">👋</span>
               </h1>
-              <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-500">
-                <MapPin className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-2 mt-4 text-sm sm:text-base text-teal-50 font-medium">
+                <MapPin className="h-4 w-4" />
                 <span>{locationLabel}</span>
               </div>
             </div>
           </div>
 
-          {/* ── Bio Section ── */}
+          {/* ── Interests Section ── */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-900">نبذة عني</h2>
-              {!editingBio && (
+              <div className="flex items-center flex-row-reverse gap-2">
+                <Heart className="h-5 w-5 text-teal-600" />
+                <h2 className="text-lg font-bold text-gray-900">الاهتمامات</h2>
+              </div>
+              {interests !== userData.interests && (
                 <button
-                  onClick={() => setEditingBio(true)}
-                  className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 transition cursor-pointer"
+                  onClick={handleInterestsSave}
+                  disabled={isSavingInterests}
+                  className="flex items-center gap-1.5 text-sm font-bold text-teal-600 hover:text-teal-700 transition cursor-pointer disabled:opacity-50"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
-                  تعديل
+                  <Save className="h-3.5 w-3.5" />
+                  {isSavingInterests ? "جارٍ الحفظ..." : "حفظ التغييرات"}
                 </button>
               )}
             </div>
-
-            {editingBio ? (
-              <div className="space-y-3">
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  rows={3}
-                  maxLength={300}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 px-4 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-teal-400 focus:ring-1 focus:ring-teal-200 resize-none"
-                  placeholder="اكتب نبذة مختصرة عنك..."
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
-                    {bio.length}/300 حرف
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setBio(userData.bio);
-                        setEditingBio(false);
-                      }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-100 transition cursor-pointer"
-                    >
-                      إلغاء
-                    </button>
-                    <button
-                      onClick={handleBioSave}
-                      disabled={isLoading}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-600 text-white text-xs font-semibold hover:bg-teal-700 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Save className="h-3 w-3" />
-                      {isLoading ? "جارٍ الحفظ..." : "حفظ"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {bio || "لم تتم إضافة نبذة بعد."}
-              </p>
-            )}
-          </div>
-
-          {/* ── Interests Section ── */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Heart className="h-4 w-4 text-teal-500" />
-              <h2 className="text-base font-bold text-gray-900">الاهتمامات</h2>
-            </div>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs sm:text-sm text-gray-500 mb-5">
               اختر المواضيع التي تهمك لتخصيص تجربتك في Trendy
             </p>
-            <div className="flex flex-wrap gap-2 sm:gap-2.5">
-              {INTEREST_OPTIONS.map(({ key, label, emoji }) => {
+            <div className="flex flex-wrap gap-2.5 sm:gap-3">
+              {INTEREST_OPTIONS.map(({ key, label, Icon }) => {
                 const active = interests.includes(key);
                 return (
                   <button
                     key={key}
                     onClick={() => toggleInterest(key)}
-                    className={`flex items-center gap-1.5 rounded-full border px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition cursor-pointer ${
+                    className={`flex items-center gap-2 rounded-full border px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium transition-all cursor-pointer ${
                       active
-                        ? "bg-teal-50 text-teal-700 border-teal-300 shadow-sm"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"
+                        ? "bg-teal-600 text-white border-teal-600 shadow-md scale-105"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:bg-teal-50/10"
                     }`}
                   >
-                    <span>{emoji}</span>
+                    <Icon className={`h-4 w-4 ${active ? "text-white" : "text-gray-400"}`} />
                     {label}
                   </button>
                 );
