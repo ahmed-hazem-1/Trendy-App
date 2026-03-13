@@ -24,6 +24,7 @@ import {
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
 import MobileSidebar from "../UI/MobileSidebar";
+import UserSidebar from "../features/feed/UserSidebar";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import {
@@ -236,24 +237,13 @@ export default function Posts() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
-        {/* Right ads sidebar */}
-        {!isPremium && (
-          <aside className="hidden lg:block sticky top-24 self-start space-y-4">
-            {MOCK_ADS.slice(0, 2).map((ad) => (
-              <AdCard key={ad.id} ad={ad} variant="sidebar" />
-            ))}
-            <div className="xl:hidden space-y-4">
-              <div className="flex items-center gap-2 pt-1">
-                <div className="h-px flex-1 bg-gray-100" />
-                <span className="text-[10px] text-gray-300">المزيد</span>
-                <div className="h-px flex-1 bg-gray-100" />
-              </div>
-              {MOCK_ADS.slice(2).map((ad) => (
-                <AdCard key={ad.id} ad={ad} variant="sidebar" />
-              ))}
-            </div>
-          </aside>
-        )}
+        {/* Left (profile/categories) sidebar — hidden on mobile */}
+        <div className="hidden lg:block">
+          <UserSidebar
+            activeCategory={activeCategory}
+            onCategoryChange={setActiveCategory}
+          />
+        </div>
 
         {/* Main article content */}
         <section className="min-w-0">
