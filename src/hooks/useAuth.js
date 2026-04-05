@@ -54,11 +54,9 @@ export function useAuthListener() {
 
     // 1. Get existing session
     async function init() {
-      // Hard timeout: if getSession() hangs (NavigatorLockManager deadlock),
-      // force-clear stale tokens and dismiss the splash screen after 2 seconds.
+      // Hard timeout: if getSession() hangs, force-clear stale tokens after 2 seconds.
       const lockTimeoutId = setTimeout(() => {
         if (!mounted) return;
-        console.warn("Auth init timeout – clearing stale session tokens");
         localStorage.removeItem("sb-trendy-auth-token");
         sessionStorage.clear();
         if (mounted) dispatch(clearAuth());
@@ -108,7 +106,6 @@ export function useAuthListener() {
           err?.message?.includes("LockManager") ||
           err?.name === "NavigatorLockAcquireTimeoutError"
         ) {
-          console.warn("Auth lock timeout – clearing stale session");
           localStorage.removeItem("sb-trendy-auth-token");
         }
         if (mounted) dispatch(clearAuth());
@@ -174,9 +171,57 @@ export function useAuthListener() {
       }
     });
 
+    // 3. Proactive session recovery when returning from idle / reconnecting
+    //    This prevents the "first API call after idle fails" scenario.
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== "visible" || !mounted) return;
+      try {
+        // getSession() will auto-refresh if the token is expired,
+        // thanks to the in-memory lock serialising refresh attempts.
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+          dispatch(
+            setUser({ user: session.user, profile: profileRef.current }),
+          );
+          // Refetch stale queries when returning to the tab
+          if (window._reactQueryClient) {
+            window._reactQueryClient.invalidateQueries();
+          }
+        }
+      } catch {
+        // Swallow – the next user interaction will retry
+      }
+    };
+
+    const handleOnline = async () => {
+      if (!mounted) return;
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+          dispatch(
+            setUser({ user: session.user, profile: profileRef.current }),
+          );
+          if (window._reactQueryClient) {
+            window._reactQueryClient.invalidateQueries();
+          }
+        }
+      } catch {
+        // Swallow
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("online", handleOnline);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("online", handleOnline);
     };
   }, [dispatch]);
 }

@@ -152,12 +152,6 @@ export default function Posts() {
   const { data: rawPost, isLoading, isError } = useNewsItem(Number(id));
   const post = rawPost ? mapNewsItem(rawPost) : null;
 
-  // Debug logging
-  console.log("📄 Posts page - isPremium:", isPremium);
-  console.log("📄 Posts page - post:", post);
-  console.log("📄 Posts page - post.evidence:", post?.evidence);
-  console.log("📄 Posts page - filtered evidence count:", post?.evidence?.filter((ev) => ev.title || ev.snippet || ev.url).length);
-
   // Evidence is fetched lazily — only when the sources dropdown is first opened
   const { data: evidence = [], isFetching: evidenceFetching } =
     useEvidenceItems(Number(id), sourcesOpen && isPremium);

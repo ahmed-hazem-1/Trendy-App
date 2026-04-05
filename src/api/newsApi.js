@@ -23,7 +23,6 @@ async function attachVerdicts(newsItems, existingVerdictMap) {
       .in("news_id", ids);
 
     if (error) {
-      console.warn("Failed to fetch verdicts:", error.message);
       return newsItems;
     }
 
@@ -77,7 +76,6 @@ async function prefetchVerdicts(verificationStatus) {
   // Check if we have cached verdicts (less than 5 minutes old)
   const cached = verdictCache.get(verificationStatus);
   if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
-    console.log(`[prefetchVerdicts] Using cached verdicts for ${verificationStatus}`);
     return cached.data;
   }
 
@@ -85,14 +83,12 @@ async function prefetchVerdicts(verificationStatus) {
   let lastError;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      console.log(`[prefetchVerdicts] Fetching ${verificationStatus} (attempt ${attempt + 1}/3)`);
       const result = await _fetchVerdictsWithRetry(verificationStatus);
       // Cache the result
       verdictCache.set(verificationStatus, {
         data: result,
         timestamp: Date.now(),
       });
-      console.log(`[prefetchVerdicts] Successfully cached ${verificationStatus}:`, result);
       return result;
     } catch (err) {
       lastError = err;
@@ -100,7 +96,6 @@ async function prefetchVerdicts(verificationStatus) {
       if (attempt < 2) {
         // Exponential backoff before retry
         const delay = Math.min(100 * Math.pow(2, attempt), 1000);
-        console.log(`[prefetchVerdicts] Retrying after ${delay}ms...`);
         await new Promise((resolve) =>
           setTimeout(resolve, delay),
         );
@@ -124,7 +119,6 @@ async function _fetchVerdictsWithRetry(verificationStatus) {
   const upperStatus = verificationStatus.toUpperCase();
 
   if (upperStatus === "UNVERIFIED") {
-    console.log("[_fetchVerdictsWithRetry] Querying all verdicts for UNVERIFIED filter");
     const { data: verdicts, error } = await supabase
       .from("verdicts")
       .select("news_id, verdict, confidence, reasoning, sources_used");
@@ -141,13 +135,11 @@ async function _fetchVerdictsWithRetry(verificationStatus) {
       ids.push(Number(v.news_id));
     });
 
-    console.log(`[_fetchVerdictsWithRetry] Found ${ids.length} verdicted items for UNVERIFIED`);
     return { filter: { mode: "exclude", ids }, verdictMap };
   }
 
   // Specific status — may map to multiple DB values (e.g. VERIFIED → VERIFIED | TRUE)
   const aliases = VERDICT_ALIASES[upperStatus] || [upperStatus];
-  console.log(`[_fetchVerdictsWithRetry] Querying ${upperStatus} with aliases:`, aliases);
 
   let q = supabase
     .from("verdicts")
@@ -173,7 +165,6 @@ async function _fetchVerdictsWithRetry(verificationStatus) {
     ids.push(Number(v.news_id));
   });
 
-  console.log(`[_fetchVerdictsWithRetry] Found ${ids.length} verdicts for ${upperStatus}`);
   return { filter: { mode: "include", ids }, verdictMap };
 }
 
@@ -287,11 +278,9 @@ export async function fetchNewsItems({
 
     const { data, error, count } = await query;
     if (error) {
-      console.error("Failed to fetch news items:", error);
+      console.error("fetchNewsItems error:", error.message, error.code);
       throw error;
     }
-
-    console.log("✓ Fetched news items, count:", count);
 
     // Attach verdict details — reuse the already-fetched verdictMap when available
     const merged = await attachVerdicts(data, verdictMap);
@@ -322,8 +311,6 @@ export async function fetchEvidenceItems(newsItemId) {
  */
 export async function fetchNewsItemById(id) {
   try {
-    console.log("Fetching news item by ID:", id);
-    
     // Fetch basic news item data
     const { data, error } = await supabase
       .from("news_items")
@@ -348,8 +335,6 @@ export async function fetchNewsItemById(id) {
       throw error;
     }
 
-    console.log("✓ Fetched news item:", data);
-
     // Fetch verdict separately (no FK constraint)
     const { data: verdictData } = await supabase
       .from("verdicts")
@@ -363,15 +348,11 @@ export async function fetchNewsItemById(id) {
       .select("*")
       .eq("news_item_id", id);
 
-    console.log("✓ Fetched evidence items:", evidenceData);
-
     // Fetch verification log
     const { data: verificationLogData = [] } = await supabase
       .from("verification_log")
       .select("*")
       .eq("news_item_id", id);
-
-    console.log("✓ Fetched verification log:", verificationLogData);
 
     return {
       ...data,

@@ -156,11 +156,8 @@ export default function Profile() {
     if (!profile?.id) return;
     setIsSavingInterests(true);
     try {
-      console.log("Saving interests to DB:", interests);
       await updateUserProfile(profile.id, { interests });
-      console.log("Interests saved, refreshing profile...");
       await refreshProfile();
-      console.log("Profile refreshed successfully");
     } catch (err) {
       console.error("Interests update error:", err);
       alert("حدث خطأ أثناء حفظ الاهتمامات: " + err.message);

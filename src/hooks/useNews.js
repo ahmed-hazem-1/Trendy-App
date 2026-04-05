@@ -355,7 +355,6 @@ export function useToggleBookmark() {
   return useMutation({
     mutationFn: toggleBookmark,
     onMutate: async ({ newsItemId, userId }) => {
-      console.log("🔄 Bookmark mutation started for newsItemId:", newsItemId, "userId:", userId);
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["userBookmark", newsItemId, userId] });
       await queryClient.cancelQueries({ queryKey: ["userBookmarks", userId] });
@@ -366,7 +365,6 @@ export function useToggleBookmark() {
 
       // Determine if currently bookmarked
       const isCurrentlyBookmarked = !!previousBookmark;
-      console.log("Current bookmark state:", isCurrentlyBookmarked ? "bookmarked" : "not bookmarked");
 
       // Optimistically update individual bookmark state
       queryClient.setQueryData(["userBookmark", newsItemId, userId], (old) => {
@@ -393,13 +391,11 @@ export function useToggleBookmark() {
       }
     },
     onSuccess: (data, variables) => {
-      console.log("✅ Bookmark mutation succeeded. Data:", data);
       // Update with server response for individual bookmark
       queryClient.setQueryData(["userBookmark", variables.newsItemId, variables.userId], data);
       
       // Invalidate and refetch the full bookmarks list to ensure consistency with server
       // This will fetch the complete nested data structure with news_items
-      console.log("🔄 Invalidating userBookmarks cache for userId:", variables.userId);
       queryClient.invalidateQueries({ queryKey: ["userBookmarks", variables.userId] });
     },
   });

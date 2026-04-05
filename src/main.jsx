@@ -9,15 +9,17 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 2,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 2, // 2 minutes default
+      refetchOnReconnect: true,
+      staleTime: 1000 * 60 * 3, // 3 minutes default
       gcTime: 1000 * 60 * 10, // keep inactive cache for 10 minutes
+      networkMode: "always", // ALWAYS fire queries — never pause based on navigator.onLine
     },
     mutations: {
       retry: 0,
-      // Enable immediate updates without waiting
-      networkMode: 'online',
+      networkMode: "always",
     },
   },
 });
