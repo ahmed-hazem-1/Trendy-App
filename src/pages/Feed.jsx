@@ -20,9 +20,11 @@ import { Loader } from "lucide-react";
 import { selectProfile } from "../store/authSlice";
 
 function mapNewsItem(item) {
-  const category = Array.isArray(item.categories)
-    ? item.categories[0]?.name || "عام"
-    : item.categories?.name || "عام";
+  const categoryMeta = Array.isArray(item.categories)
+    ? (item.categories[0] ?? null)
+    : (item.categories ?? null);
+  const category = categoryMeta?.name || "عام";
+  const categorySlug = categoryMeta?.slug || null;
   // verdicts comes as an object (unique FK) or array; normalise
   const verdict = Array.isArray(item.verdicts)
     ? (item.verdicts[0] ?? null)
@@ -39,6 +41,8 @@ function mapNewsItem(item) {
     sources_used: verdict?.sources_used || null,
     timeAgo: formatTimeAgo(item.ingested_at || item.published_at),
     category,
+    categorySlug,
+    imageUrl: item.image_url || null,
     likes: 0,
     reactions: 0,
   };

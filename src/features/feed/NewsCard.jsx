@@ -27,6 +27,11 @@ import {
   useToggleBookmark,
 } from "../../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/authSlice";
+import {
+  resolvePostImageView,
+  POST_MEDIA_FRAME_PRESETS,
+  POST_MEDIA_IMAGE_CLASS,
+} from "../../postMedia";
 
 const REACTION_CONFIG = [
   {
@@ -131,6 +136,11 @@ function NewsCard({
 
   // Build a shareable URL for this post
   const postUrl = `${window.location.origin}/posts/${item.id}`;
+  const postImage = resolvePostImageView({
+    category: item.category,
+    categorySlug: item.categorySlug,
+    imageUrl: item.imageUrl,
+  });
 
   return (
     <>
@@ -179,6 +189,20 @@ function NewsCard({
           to={`/posts/${item.id}`}
           className="block hover:bg-gray-50/50 transition"
         >
+          <div className="px-3 sm:px-5 mb-2 sm:mb-3">
+            <div
+              className={`${POST_MEDIA_FRAME_PRESETS.feed} overflow-hidden rounded-xl border border-gray-100 bg-gray-50`}
+            >
+              <img
+                src={postImage.src}
+                alt={`صورة تصنيف ${item.category || "عام"}`}
+                className={POST_MEDIA_IMAGE_CLASS}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+
           <h2 className="text-sm sm:text-base lg:text-lg duration-200 hover:text-accent-emerald font-bold text-gray-900 leading-snug px-3 sm:px-5 mb-2 sm:mb-3">
             {item.title}
           </h2>

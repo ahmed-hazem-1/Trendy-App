@@ -324,7 +324,8 @@ export async function fetchNewsItemById(id) {
         credibility_score,
         ingested_at,
         published_at,
-        language
+        language,
+        categories (name, slug)
       `,
       )
       .eq("id", id)
@@ -614,7 +615,8 @@ export async function fetchUserBookmarks(userId) {
           verification_status, 
           credibility_score, 
           ingested_at,
-          published_at
+          published_at,
+          categories (name, slug)
         )
       `,
       )

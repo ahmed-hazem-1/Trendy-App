@@ -36,6 +36,11 @@ import {
   useEvidenceItems,
 } from "../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../store/authSlice";
+import {
+  resolvePostImageView,
+  POST_MEDIA_FRAME_PRESETS,
+  POST_MEDIA_IMAGE_CLASS,
+} from "../postMedia";
 
 // ─── helpers ────────────────────────────────
 
@@ -63,8 +68,10 @@ function formatDate(dateStr) {
 }
 
 function mapNewsItem(item) {
-  const category = item.news_categories?.[0]?.categories?.name || "عام";
-  const categorySlug = item.news_categories?.[0]?.categories?.slug || null;
+  const categoryMeta =
+    item.categories || item.news_categories?.[0]?.categories || null;
+  const category = categoryMeta?.name || "عام";
+  const categorySlug = categoryMeta?.slug || null;
   const verdict = Array.isArray(item.verdicts)
     ? (item.verdicts[0] ?? null)
     : (item.verdicts ?? null);
@@ -82,6 +89,7 @@ function mapNewsItem(item) {
     publishedAt: formatDate(item.published_at || item.ingested_at),
     category,
     categorySlug,
+    imageUrl: item.image_url || null,
     evidence: item.evidence_items || [],
     verificationLog: item.verification_log || [],
     source: item.ingestion_sources || null,
@@ -218,6 +226,11 @@ export default function Posts() {
   const confidenceLevel = getConfidenceLevel(post.credibility_score);
   const VerdictIcon =
     VERDICT_ICON[post.verification_status?.toUpperCase()] || HelpCircle;
+  const postImage = resolvePostImageView({
+    category: post.category,
+    categorySlug: post.categorySlug,
+    imageUrl: post.imageUrl,
+  });
 
   // ── full article view ─────────────────────
 
@@ -289,6 +302,20 @@ export default function Posts() {
                   <Share2 className="h-4 w-4" />
                   مشاركة
                 </button>
+              </div>
+            </div>
+
+            <div className="px-4 sm:px-8 pt-4 sm:pt-6">
+              <div
+                className={`${POST_MEDIA_FRAME_PRESETS.details} overflow-hidden rounded-2xl border border-gray-100 bg-gray-50`}
+              >
+                <img
+                  src={postImage.src}
+                  alt={`صورة تصنيف ${post.category || "عام"}`}
+                  className={POST_MEDIA_IMAGE_CLASS}
+                  loading="eager"
+                  decoding="async"
+                />
               </div>
             </div>
 

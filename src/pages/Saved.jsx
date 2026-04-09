@@ -9,6 +9,11 @@ import { useState } from "react";
 import { AdCard, MobileAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import { selectIsPremium } from "../store/authSlice";
+import {
+  resolvePostImageView,
+  POST_MEDIA_FRAME_PRESETS,
+  POST_MEDIA_IMAGE_CLASS,
+} from "../postMedia";
 
 export default function Saved() {
   const { sidebarOpen, closeSidebar } = useOutletContext();
@@ -98,8 +103,22 @@ export default function Saved() {
                   const newsItem = bookmark.news_items;
                   if (!newsItem) return null;
 
+                  const categoryMeta = Array.isArray(newsItem.categories)
+                    ? (newsItem.categories[0] ?? null)
+                    : (newsItem.categories ?? null);
                   const category =
-                    newsItem.news_categories?.[0]?.categories?.name || "عام";
+                    categoryMeta?.name ||
+                    newsItem.news_categories?.[0]?.categories?.name ||
+                    "عام";
+                  const categorySlug =
+                    categoryMeta?.slug ||
+                    newsItem.news_categories?.[0]?.categories?.slug ||
+                    null;
+                  const postImage = resolvePostImageView({
+                    category,
+                    categorySlug,
+                    imageUrl: newsItem.image_url,
+                  });
                   const savedDate = new Date(bookmark.saved_at).toLocaleDateString(
                     "ar-EG",
                     {
@@ -115,6 +134,18 @@ export default function Saved() {
                       className="rounded-xl border border-gray-100 bg-gray-50/30 p-4 hover:bg-white hover:border-teal-200 transition group/card"
                     >
                       <div className="flex items-start gap-4">
+                        <div
+                          className={`w-20 sm:w-24 md:w-28 ${POST_MEDIA_FRAME_PRESETS.saved} shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100`}
+                        >
+                          <img
+                            src={postImage.src}
+                            alt={`صورة تصنيف ${category}`}
+                            className={POST_MEDIA_IMAGE_CLASS}
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             <StatusBadge status={newsItem.verification_status} />
