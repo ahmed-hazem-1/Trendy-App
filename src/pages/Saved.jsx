@@ -13,15 +13,17 @@ import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
   POST_MEDIA_IMAGE_CLASS,
+  PostImagePreviewModal,
 } from "../postMedia";
 
 export default function Saved() {
   const { sidebarOpen, closeSidebar } = useOutletContext();
   const { profile } = useAuth();
   const isPremium = useSelector(selectIsPremium);
-  const { data: bookmarks = [], isLoading: bookmarksLoading, isFetching: bookmarksFetching } = useUserBookmarks();
+  const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
   const toggleBookmarkMutation = useToggleBookmark();
   const [activeCategory, setActiveCategory] = useState("all");
+  const [previewItem, setPreviewItem] = useState(null);
 
   const handleRemoveBookmark = async (newsId) => {
     if (!profile?.id) {
@@ -134,7 +136,19 @@ export default function Saved() {
                       className="rounded-xl border border-gray-100 bg-gray-50/30 p-4 hover:bg-white hover:border-teal-200 transition group/card"
                     >
                       <div className="flex items-start gap-4">
-                        <div
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPreviewItem({
+                              src: postImage.src,
+                              alt: `صورة تصنيف ${category}`,
+                              title: newsItem.title,
+                              postPath: `/posts/${newsItem.id}`,
+                              category,
+                              description: newsItem.content || "",
+                            })
+                          }
+                          title="فتح معاينة الصورة"
                           className={`w-20 sm:w-24 md:w-28 ${POST_MEDIA_FRAME_PRESETS.saved} shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100`}
                         >
                           <img
@@ -144,7 +158,7 @@ export default function Saved() {
                             loading="lazy"
                             decoding="async"
                           />
-                        </div>
+                        </button>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
@@ -215,6 +229,17 @@ export default function Saved() {
           </aside>
         )}
       </div>
+
+      <PostImagePreviewModal
+        isOpen={!!previewItem}
+        onClose={() => setPreviewItem(null)}
+        imageSrc={previewItem?.src}
+        imageAlt={previewItem?.alt}
+        title={previewItem?.title}
+        postPath={previewItem?.postPath}
+        category={previewItem?.category}
+        description={previewItem?.description}
+      />
     </>
   );
 }

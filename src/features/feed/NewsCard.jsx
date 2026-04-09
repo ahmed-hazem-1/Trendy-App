@@ -31,6 +31,7 @@ import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
   POST_MEDIA_IMAGE_CLASS,
+  PostImagePreviewModal,
 } from "../../postMedia";
 
 const REACTION_CONFIG = [
@@ -54,14 +55,11 @@ const REACTION_CONFIG = [
   },
 ];
 
-function NewsCard({
-  item,
-  reactionCounts: batchCounts,
-  userReaction: batchUserReaction,
-}) {
+function NewsCard({ item }) {
   const [insightOpen, setInsightOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   // Evidence is fetched lazily — only when the sources dropdown is first opened
   // and ONLY for premium users
@@ -91,7 +89,6 @@ function NewsCard({
     LOVED_IT: 0,
     NEUTRAL: 0,
   };
-  const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
 
   function handleReaction(reactionType) {
     if (!profile?.id) return; // must be logged in
@@ -141,7 +138,6 @@ function NewsCard({
     categorySlug: item.categorySlug,
     imageUrl: item.imageUrl,
   });
-
   return (
     <>
       <article className="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -184,25 +180,28 @@ function NewsCard({
           </div>
         </div>
 
+        <div className="px-3 sm:px-5 mb-2 sm:mb-3">
+          <button
+            type="button"
+            onClick={() => setImagePreviewOpen(true)}
+            title="فتح معاينة الصورة"
+            className={`block w-full cursor-zoom-in ${POST_MEDIA_FRAME_PRESETS.feed} overflow-hidden rounded-xl border border-gray-100 bg-gray-50`}
+          >
+            <img
+              src={postImage.src}
+              alt={`صورة تصنيف ${item.category || "عام"}`}
+              className={POST_MEDIA_IMAGE_CLASS}
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
+        </div>
+
         {/* Title */}
         <Link
           to={`/posts/${item.id}`}
           className="block hover:bg-gray-50/50 transition"
         >
-          <div className="px-3 sm:px-5 mb-2 sm:mb-3">
-            <div
-              className={`${POST_MEDIA_FRAME_PRESETS.feed} overflow-hidden rounded-xl border border-gray-100 bg-gray-50`}
-            >
-              <img
-                src={postImage.src}
-                alt={`صورة تصنيف ${item.category || "عام"}`}
-                className={POST_MEDIA_IMAGE_CLASS}
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </div>
-
           <h2 className="text-sm sm:text-base lg:text-lg duration-200 hover:text-accent-emerald font-bold text-gray-900 leading-snug px-3 sm:px-5 mb-2 sm:mb-3">
             {item.title}
           </h2>
@@ -368,7 +367,9 @@ function NewsCard({
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               {REACTION_CONFIG.map(
-                ({ type, emoji, Icon, label }) => {
+                (reaction) => {
+                  const { type, emoji, label } = reaction;
+                  const ReactionIcon = reaction.Icon;
                   const isActive = userReaction?.reaction_type === type;
                   return (
                     <button
@@ -385,7 +386,7 @@ function NewsCard({
                         {isActive ? (
                           <span className="text-xl sm:text-2xl">{emoji}</span>
                         ) : (
-                          <Icon className="h-4 w-4 sm:h-5 sm:w-5 stroke-[1.5]" />
+                          <ReactionIcon className="h-4 w-4 sm:h-5 sm:w-5 stroke-[1.5]" />
                         )}
                       </span>
                       {counts[type] > 0 && <span className="text-[10px] sm:text-xs font-semibold">{counts[type]}</span>}
@@ -411,6 +412,17 @@ function NewsCard({
         onClose={() => setShareOpen(false)}
         postUrl={postUrl}
         postTitle={item.title}
+      />
+
+      <PostImagePreviewModal
+        isOpen={imagePreviewOpen}
+        onClose={() => setImagePreviewOpen(false)}
+        imageSrc={postImage.src}
+        imageAlt={`صورة تصنيف ${item.category || "عام"}`}
+        title={item.title}
+        postPath={`/posts/${item.id}`}
+        category={item.category}
+        description={item.content || item.reasoning || ""}
       />
     </>
   );

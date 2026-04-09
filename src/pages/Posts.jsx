@@ -40,6 +40,7 @@ import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
   POST_MEDIA_IMAGE_CLASS,
+  PostImagePreviewModal,
 } from "../postMedia";
 
 // ─── helpers ────────────────────────────────
@@ -152,6 +153,7 @@ export default function Posts() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [shareOpen, setShareOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
@@ -174,7 +176,6 @@ export default function Posts() {
     LOVED_IT: 0,
     NEUTRAL: 0,
   };
-  const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
 
   function handleReaction(reactionType) {
     if (!profile?.id) return;
@@ -306,8 +307,11 @@ export default function Posts() {
             </div>
 
             <div className="px-4 sm:px-8 pt-4 sm:pt-6">
-              <div
-                className={`${POST_MEDIA_FRAME_PRESETS.details} overflow-hidden rounded-2xl border border-gray-100 bg-gray-50`}
+              <button
+                type="button"
+                onClick={() => setImagePreviewOpen(true)}
+                title="فتح معاينة الصورة"
+                className={`block w-full cursor-zoom-in ${POST_MEDIA_FRAME_PRESETS.details} overflow-hidden rounded-2xl border border-gray-100 bg-gray-50`}
               >
                 <img
                   src={postImage.src}
@@ -316,7 +320,7 @@ export default function Posts() {
                   loading="eager"
                   decoding="async"
                 />
-              </div>
+              </button>
             </div>
 
             {/* ── Article body ── */}
@@ -590,7 +594,9 @@ export default function Posts() {
               ) : (
                 <div className="flex items-center gap-4">
                   {REACTION_CONFIG.map(
-                    ({ type, emoji, Icon, label }) => {
+                    (reaction) => {
+                      const { type, emoji, label } = reaction;
+                      const ReactionIcon = reaction.Icon;
                       const isActive = userReaction?.reaction_type === type;
                       return (
                         <button
@@ -607,7 +613,7 @@ export default function Posts() {
                             {isActive ? (
                               <span className="text-2xl">{emoji}</span>
                             ) : (
-                              <Icon className="h-[22px] w-[22px] stroke-[1.5]" />
+                              <ReactionIcon className="h-[22px] w-[22px] stroke-[1.5]" />
                             )}
                           </span>
                           <span className={isActive ? "block text-gray-800" : "hidden"}>{label}</span>
@@ -651,6 +657,17 @@ export default function Posts() {
         onClose={() => setShareOpen(false)}
         postUrl={postUrl}
         postTitle={post.title}
+      />
+
+      <PostImagePreviewModal
+        isOpen={imagePreviewOpen}
+        onClose={() => setImagePreviewOpen(false)}
+        imageSrc={postImage.src}
+        imageAlt={`صورة تصنيف ${post.category || "عام"}`}
+        title={post.title}
+        postPath={`/posts/${post.id}`}
+        category={post.category}
+        description={post.content || ""}
       />
     </>
   );
