@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "../features/feed/StatusBadge";
 import ShareModal from "../features/feed/ShareModal";
+import { buildPostShareUrl } from "../features/feed/shareUtils";
 import MobileSidebar from "../UI/MobileSidebar";
 import UserSidebar from "../features/feed/UserSidebar";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
@@ -118,6 +119,13 @@ const REACTION_CONFIG = [
   },
 ];
 
+const REACTION_META = {
+  EXCITED: { emoji: "❤️", label: "أحببت" },
+  NEUTRAL: { emoji: "😐", label: "محايد" },
+  SKEPTICAL: { emoji: "😲", label: "مفاجأ" },
+  ANGRY: { emoji: "😡", label: "غاضب" },
+};
+
 const CONFIDENCE_COLORS = {
   high: { bar: "bg-green-500", text: "text-green-700", label: "ثقة عالية" },
   medium: {
@@ -154,6 +162,7 @@ export default function Posts() {
   const [shareOpen, setShareOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [lastReactedType, setLastReactedType] = useState(null);
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
@@ -172,13 +181,23 @@ export default function Posts() {
   const removeMutation = useRemoveReaction();
 
   const counts = reactionCounts || {
-    SURPRISED: 0,
-    LOVED_IT: 0,
+    EXCITED: 0,
     NEUTRAL: 0,
+    SKEPTICAL: 0,
+    ANGRY: 0,
   };
+  const totalReactions = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  const topReactions = Object.entries(counts)
+    .filter(([type, value]) => value > 0 && REACTION_META[type])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2);
 
   function handleReaction(reactionType) {
     if (!profile?.id) return;
+
+    setLastReactedType(reactionType);
+    setTimeout(() => setLastReactedType(null), 260);
+
     if (userReaction?.reaction_type === reactionType) {
       removeMutation.mutate({ newsItemId: Number(id), userId: profile.id });
     } else {
@@ -190,7 +209,7 @@ export default function Posts() {
     }
   }
 
-  const postUrl = `${window.location.origin}/posts/${id}`;
+  const postUrl = buildPostShareUrl(id);
 
   // ── loading / error states ────────────────
 
@@ -592,7 +611,8 @@ export default function Posts() {
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-4">
                   {REACTION_CONFIG.map(
                     (reaction) => {
                       const { type, emoji, label } = reaction;
@@ -609,7 +629,9 @@ export default function Posts() {
                               : "text-gray-500 hover:text-gray-700"
                           }`}
                         >
-                          <span className="flex items-center justify-center">
+                          <span
+                            className={`flex items-center justify-center ${lastReactedType === type ? "animate-reaction-pop" : ""}`}
+                          >
                             {isActive ? (
                               <span className="text-2xl">{emoji}</span>
                             ) : (
@@ -626,6 +648,30 @@ export default function Posts() {
                       );
                     },
                   )}
+                  </div>
+
+                  {topReactions.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-gray-400">الأكثر تفاعلاً:</span>
+                      {topReactions.map(([type, value]) => {
+                        const meta = REACTION_META[type];
+                        const percent = totalReactions > 0
+                          ? Math.round((value / totalReactions) * 100)
+                          : 0;
+
+                        return (
+                          <span
+                            key={type}
+                            className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] text-gray-600"
+                          >
+                            <span>{meta.emoji}</span>
+                            <span>{meta.label}</span>
+                            <span className="font-semibold text-gray-500">{percent}%</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               )}
               <button
@@ -657,6 +703,12 @@ export default function Posts() {
         onClose={() => setShareOpen(false)}
         postUrl={postUrl}
         postTitle={post.title}
+        postSummary={post.reasoning || post.content || ""}
+        postStatus={post.verification_status}
+        postConfidence={post.credibility_score}
+        postCategory={post.category}
+        postImageSrc={postImage.src}
+        postId={post.id}
       />
 
       <PostImagePreviewModal

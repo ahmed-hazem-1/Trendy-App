@@ -1,6 +1,14 @@
-import { X, Copy, Check, Link } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { X, Copy, Check, Link2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import {
+  buildTrackedUrl,
+  buildPlatformShareMessage,
+  buildPlatformShareUrl,
+  getShareStatusLabel,
+  hasPublicShareBaseUrl,
+  isLikelyLocalUrl,
+} from "./shareUtils";
 
 const SOCIAL_PLATFORMS = [
   {
@@ -63,108 +71,184 @@ const SOCIAL_PLATFORMS = [
       </svg>
     ),
   },
+  {
+    name: "نسخ الرابط",
+    key: "copy",
+    color: "#0f766e",
+    icon: <Link2 className="h-6 w-6 text-white" />,
+  },
 ];
 
-function buildShareUrl(platform, postUrl, title) {
-  const encodedUrl = encodeURIComponent(postUrl);
-  const encodedTitle = encodeURIComponent(title);
-
-  switch (platform) {
-    case "facebook":
-      return `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
-    case "whatsapp":
-      return `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`;
-    case "telegram":
-      return `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`;
-    case "twitter":
-      return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
-    case "linkedin":
-      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
-    case "email":
-      return `mailto:?subject=${encodedTitle}&body=${encodedUrl}`;
-    default:
-      return "#";
-  }
-}
-
-export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
+export default function ShareModal({
+  isOpen,
+  onClose,
+  postUrl,
+  postTitle,
+  postSummary,
+  postStatus,
+  postConfidence,
+  postCategory,
+  postId,
+}) {
   const [copied, setCopied] = useState(false);
+  const [shareHint, setShareHint] = useState("");
   const modalRef = useRef(null);
 
-  // Close on Escape key
+  const closeModal = useCallback(() => {
+    setCopied(false);
+    setShareHint("");
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === "Escape") onClose();
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        closeModal();
+      }
     }
+
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
     }
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, closeModal]);
 
-  function handleBackdropClick(e) {
-    if (modalRef.current && !modalRef.current.contains(e.target)) {
-      onClose();
+  function handleBackdropClick(event) {
+    if (modalRef.current && !modalRef.current.contains(event.target)) {
+      closeModal();
     }
   }
 
-  async function handleCopy() {
+  function getPayload(sourceKey) {
+    const trackedUrl = buildTrackedUrl(postUrl, {
+      source: sourceKey,
+      postId,
+    });
+
+    return { trackedUrl };
+  }
+
+  async function copyTextToClipboard(text) {
     try {
-      await navigator.clipboard.writeText(postUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(text);
+      return true;
     } catch {
-      // fallback
-      const input = document.createElement("input");
-      input.value = postUrl;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand("copy");
-      document.body.removeChild(input);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      try {
+        const input = document.createElement("input");
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        return true;
+      } catch {
+        return false;
+      }
     }
   }
 
-  function handleShare(platform) {
-    const url = buildShareUrl(platform, postUrl, postTitle);
-    if (platform === "email") {
-      const a = document.createElement("a");
-      a.href = url;
-      a.click();
+  function showHint(message) {
+    setShareHint(message);
+    setTimeout(() => setShareHint(""), 3200);
+  }
+
+  async function handleCopyLink() {
+    const { trackedUrl } = getPayload("copy_link");
+
+    const didCopy = await copyTextToClipboard(trackedUrl);
+
+    if (didCopy) {
+      setCopied(true);
+      showHint("تم نسخ الرابط");
+      setTimeout(() => setCopied(false), 1800);
     } else {
-      window.open(url, "_blank", "noopener,noreferrer");
+      showHint("تعذر النسخ تلقائيا. جرب مرة أخرى");
+    }
+  }
+
+  async function handleShare(platformKey) {
+    if (platformKey === "copy") {
+      await handleCopyLink();
+      return;
+    }
+
+    const { trackedUrl } = getPayload(platformKey);
+    const shareMessage = buildPlatformShareMessage({
+      title: postTitle,
+      summary: postSummary,
+      status: postStatus,
+      confidence: postConfidence,
+      category: postCategory,
+    });
+
+    const localDevUrl = isLikelyLocalUrl(trackedUrl);
+    const needsPublicCrawlerUrl = platformKey === "facebook" || platformKey === "linkedin";
+    const hasPublicBase = hasPublicShareBaseUrl();
+
+    if (needsPublicCrawlerUrl && localDevUrl && !hasPublicBase) {
+      const clipboardText = `${shareMessage}\n\n${trackedUrl}`.trim();
+      await copyTextToClipboard(clipboardText);
+      showHint("فيسبوك ولينكدإن لا يقرآن localhost. أضف VITE_PUBLIC_SHARE_URL برابط HTTPS عام");
+      return;
+    }
+
+    const shareUrl = buildPlatformShareUrl(platformKey, {
+      url: trackedUrl,
+      title: postTitle,
+      text: shareMessage,
+    });
+
+    const needsPrefillAssist = platformKey === "facebook" || platformKey === "linkedin";
+    if (needsPrefillAssist || localDevUrl) {
+      const clipboardText = `${shareMessage}\n\n${trackedUrl}`.trim();
+      const didCopyAssist = await copyTextToClipboard(clipboardText);
+
+      if (didCopyAssist) {
+        if (localDevUrl) {
+          showHint("تم نسخ النص والرابط. منصات المشاركة قد تتجاهل روابط localhost");
+        } else {
+          showHint("تم نسخ النص تلقائيا. الصقه إذا لم يظهر داخل المنصة");
+        }
+      }
+    }
+
+    if (platformKey === "email") {
+      const anchor = document.createElement("a");
+      anchor.href = shareUrl;
+      anchor.click();
+    } else {
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
     }
   }
 
   if (!isOpen) return null;
+
+  const statusLabel = getShareStatusLabel(postStatus);
+  const isLocalPostUrl = isLikelyLocalUrl(postUrl);
 
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
       onClick={handleBackdropClick}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 share-backdrop-enter" />
 
-      {/* Modal */}
       <div
         ref={modalRef}
         className="relative w-full max-w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl share-modal-enter overflow-hidden max-h-[85vh] sm:max-h-[90vh] flex flex-col"
       >
-        {/* Mobile drag handle */}
         <div className="flex justify-center pt-2.5 pb-0 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-gray-300" />
         </div>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100">
           <button
-            onClick={onClose}
+            onClick={closeModal}
             className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
           >
             <X className="h-5 w-5" />
@@ -172,70 +256,72 @@ export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
           <h3 className="text-sm sm:text-base font-bold text-gray-800">
             مشاركة المنشور
           </h3>
-          <div className="w-8" /> {/* spacer for centering */}
+          <div className="w-8" />
         </div>
 
-        {/* Social Grid */}
-        <div className="px-4 sm:px-5 py-4 sm:py-5 overflow-y-auto scrollbar-hide">
-          <div className="grid grid-cols-3 gap-3 sm:gap-4">
-            {SOCIAL_PLATFORMS.map((platform) => (
-              <button
-                key={platform.key}
-                onClick={() => handleShare(platform.key)}
-                className="flex flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer active:scale-95 transition-transform"
-              >
-                <div
-                  className="h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
-                  style={{ backgroundColor: platform.color }}
+        <div className="px-4 sm:px-5 py-4 sm:py-5 overflow-y-auto scrollbar-hide space-y-4">
+          <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+            <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
+              {postTitle}
+            </p>
+            <p className="text-xs text-gray-500">
+              {postCategory || "عام"} • {statusLabel}
+            </p>
+            <p className="text-[11px] text-teal-700 mt-2 font-medium">
+              المشاركة تتضمن الملخص + رابط Trendy + هاشتاجات
+            </p>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3 sm:gap-4">
+            {SOCIAL_PLATFORMS.map((platform) => {
+              const isCopy = platform.key === "copy";
+              const isCopyActive = isCopy && copied;
+
+              return (
+                <button
+                  key={platform.key}
+                  onClick={() => handleShare(platform.key)}
+                  className="flex flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer active:scale-95 transition-transform"
                 >
-                  <span className="[&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
-                    {platform.icon}
+                  <div
+                    className={`h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
+                      isCopyActive ? "bg-green-500" : ""
+                    }`}
+                    style={{ backgroundColor: isCopyActive ? undefined : platform.color }}
+                  >
+                    {isCopyActive ? (
+                      <Check className="h-6 w-6 text-white" />
+                    ) : (
+                      <span className="[&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-6 sm:[&>svg]:w-6">
+                        {platform.icon}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] sm:text-xs font-medium text-gray-600 group-hover:text-gray-900 transition text-center">
+                    {isCopyActive ? "تم النسخ" : platform.name}
                   </span>
-                </div>
-                <span className="text-[11px] sm:text-xs font-medium text-gray-600 group-hover:text-gray-900 transition">
-                  {platform.name}
-                </span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Copy Link Section */}
-        <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 rounded-xl bg-gray-50 border border-gray-200 px-3 py-2.5">
-            <div className="flex items-center gap-2 min-w-0 flex-1 order-1 xs:order-none">
-              <Link className="h-4 w-4 text-gray-400 shrink-0" />
-              <p
-                className="text-xs sm:text-sm text-gray-500 truncate flex-1 text-left"
-                dir="ltr"
-              >
-                {postUrl}
-              </p>
+          {shareHint ? (
+            <div className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+              {shareHint}
             </div>
-            <button
-              onClick={handleCopy}
-              className={`shrink-0 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer order-2 xs:order-none ${
-                copied
-                  ? "bg-green-500 text-white"
-                  : "bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white"
-              }`}
-            >
-              {copied ? (
-                <span className="flex items-center justify-center gap-1">
-                  <Check className="h-3.5 w-3.5" />
-                  تم النسخ
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-1">
-                  <Copy className="h-3.5 w-3.5" />
-                  نسخ الرابط
-                </span>
-              )}
-            </button>
-          </div>
+          ) : null}
+
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            فيسبوك ولينكدإن قد لا يسمحان بملء النص تلقائيا. في هذه الحالة سيتم نسخ النص لكي تلصقه مباشرة.
+          </p>
+
+          {isLocalPostUrl ? (
+            <p className="text-[11px] text-red-600 leading-relaxed">
+              أنت تعمل على localhost. لإظهار المعاينة على فيسبوك/لينكدإن استخدم VITE_PUBLIC_SHARE_URL برابط HTTPS عام.
+            </p>
+          ) : null}
         </div>
 
-        {/* Bottom safe-area for mobile */}
         <div className="h-[env(safe-area-inset-bottom,8px)] sm:h-0" />
       </div>
     </div>,
