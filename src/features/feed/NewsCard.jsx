@@ -11,6 +11,7 @@ import {
   Heart,
   Meh,
   Smile,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -165,6 +166,12 @@ function NewsCard({ item }) {
         <div className="flex items-center justify-between px-3 sm:px-5 pt-2.5 sm:pt-4 mb-2 sm:mb-3">
           <div className="flex items-center gap-1.5 sm:gap-2.5">
             <StatusBadge status={item.verification_status} />
+            {item.verificationNumber > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-blue-700">
+                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                {item.verificationNumber} مرات
+              </span>
+            )}
             {!isDemoMode && (
               <button
                 onClick={handleBookmark}

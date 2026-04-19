@@ -277,7 +277,6 @@ export async function upgradeToPremium(userId) {
         status: "TRIAL",
         trial_ends_at: trialEndsAt,
         cancelled_at: null,
-        updated_at: now,
       })
       .eq("id", existing.id)
       .select(
@@ -312,6 +311,35 @@ export async function upgradeToPremium(userId) {
     if (error) throw error;
     return data;
   }
+}
+
+/**
+ * Cancel an existing subscription immediately.
+ * The frontend refreshes the profile afterward, so premium state drops out
+ * of the Redux selector on the next sync.
+ */
+export async function cancelSubscription(subscriptionId) {
+  if (!subscriptionId) {
+    throw new Error("Missing subscription id");
+  }
+
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("user_subscriptions")
+    .update({
+      status: "CANCELLED",
+      cancelled_at: now,
+    })
+    .eq("id", subscriptionId)
+    .select(
+      `
+        *,
+        subscription_plans (*)
+      `,
+    );
+
+  if (error) throw error;
+  return data?.[0] || null;
 }
 
 /**

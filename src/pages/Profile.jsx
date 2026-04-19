@@ -1,5 +1,6 @@
 import { useForm, Controller } from "react-hook-form";
 import {
+  LayoutGrid,
   User,
   Mail,
   Phone,
@@ -22,9 +23,10 @@ import {
   Clapperboard,
   GraduationCap,
   Leaf,
+  Crown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import FormInput from "../UI/FormInput";
 import FormSelect from "../UI/FormSelect";
@@ -32,6 +34,7 @@ import Button from "../UI/Button";
 import MobileSidebar from "../UI/MobileSidebar";
 import { EGYPT_GOVERNORATES } from "../utils/constants";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
+import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
@@ -64,15 +67,65 @@ const FALLBACK_USER = {
   avatar: "/logo/Trendy-logo-no-text.png",
 };
 
+const PROFILE_TABS = [
+  { key: "overview", label: "نظرة عامة", icon: LayoutGrid },
+  { key: "personal-info", label: "المعلومات الشخصية", icon: User },
+  { key: "interests", label: "الاهتمامات", icon: Heart },
+  { key: "saved-posts", label: "الأخبار المحفوظة", icon: Bookmark },
+  { key: "premium", label: "البريميوم", icon: Crown },
+];
+
+function ProfileTabNav({ activeTab, onTabChange, vertical = false }) {
+  return (
+    <nav
+      className={
+        vertical
+          ? "space-y-2"
+          : "flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin"
+      }
+    >
+      {PROFILE_TABS.map(({ key, label, icon: Icon }) => {
+        const active = activeTab === key;
+
+        return (
+          <button
+            key={key}
+            type="button"
+            onClick={() => onTabChange(key)}
+            className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
+              vertical
+                ? `w-full justify-start border ${
+                    active
+                      ? "border-teal-200 bg-teal-50 text-teal-800"
+                      : "border-transparent text-gray-600 hover:bg-gray-50"
+                  }`
+                : `${
+                    active
+                      ? "bg-teal-600 text-white shadow-sm"
+                      : "border border-gray-200 bg-white text-gray-600 hover:border-teal-200 hover:bg-teal-50/40"
+                  }`
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 export default function Profile() {
   const { sidebarOpen, closeSidebar } = useOutletContext();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, cancelSubscription, cancelLoading, cancelError } = useAuth();
   const isPremium = useSelector(selectIsPremium);
   const { data: bookmarks = [], isLoading: bookmarksLoading } = useUserBookmarks();
   const toggleBookmarkMutation = useToggleBookmark();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [premiumOpen, setPremiumOpen] = useState(false);
 
   // Derive user data from profile (Supabase public.users row)
   const userData = profile
@@ -191,6 +244,46 @@ export default function Profile() {
   const locationLabel =
     EGYPT_GOVERNORATES.find((g) => g.value === userData.location)?.label || "";
 
+  const activeTab = searchParams.get("tab") || "overview";
+
+  const premiumSubscription = (profile?.user_subscriptions || []).find(
+    (subscription) =>
+      (subscription.status === "ACTIVE" || subscription.status === "TRIAL") &&
+      subscription.subscription_plans?.slug === "premium",
+  );
+
+  function handleTabChange(tabKey) {
+    const next = new URLSearchParams(searchParams);
+    if (tabKey === "overview") {
+      next.delete("tab");
+    } else {
+      next.set("tab", tabKey);
+    }
+    setSearchParams(next, { replace: true });
+  }
+
+  function formatSubscriptionDate(dateValue) {
+    if (!dateValue) return "—";
+    return new Date(dateValue).toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  async function handleCancelPremium() {
+    if (!premiumSubscription?.id) return;
+    const confirmed = window.confirm("هل تريد إلغاء الاشتراك البريميوم الآن؟");
+    if (!confirmed) return;
+
+    try {
+      await cancelSubscription(premiumSubscription.id);
+      await refreshProfile();
+    } catch (err) {
+      console.error("Cancel premium error:", err);
+    }
+  }
+
   return (
     <>
       <MobileSidebar
@@ -230,7 +323,7 @@ export default function Profile() {
         {/* Main profile content */}
         <section className="min-w-0 space-y-5">
           {/* Premium banner on mobile */}
-          <PremiumBanner />
+          <PremiumBanner onTryPremium={() => setPremiumOpen(true)} />
           
           {/* ── Profile Header Card (Revised: No Banner/Avatar) ── */}
           <div className="rounded-xl border border-gray-200 bg-linear-to-r from-teal-600 to-emerald-500 p-6 sm:p-8 text-white relative overflow-hidden">
@@ -253,7 +346,76 @@ export default function Profile() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-5">
+            <aside className="hidden lg:block sticky top-24 self-start">
+              <div className="rounded-xl border border-gray-200 bg-white p-3">
+                <ProfileTabNav
+                  activeTab={activeTab}
+                  onTabChange={handleTabChange}
+                  vertical
+                />
+              </div>
+            </aside>
+
+            <div className="min-w-0 space-y-5">
+              <div className="lg:hidden rounded-xl border border-gray-200 bg-white p-2">
+                <ProfileTabNav
+                  activeTab={activeTab}
+                  onTabChange={handleTabChange}
+                />
+              </div>
+
+              {activeTab === "overview" && (
+                <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid className="h-5 w-5 text-teal-600" />
+                      <h2 className="text-base font-bold text-gray-900">
+                        نظرة عامة
+                      </h2>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        isPremium
+                          ? "bg-teal-50 text-teal-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {isPremium ? "Premium نشط" : "حساب عادي"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="text-xs font-semibold text-gray-400 mb-1">
+                        الاهتمامات
+                      </p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {interests.length}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="text-xs font-semibold text-gray-400 mb-1">
+                        المحفوظات
+                      </p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {bookmarks.length}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="text-xs font-semibold text-gray-400 mb-1">
+                        البريميوم
+                      </p>
+                      <p className="text-lg font-bold text-gray-900">
+                        {isPremium ? "نشط" : "غير مشترك"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
           {/* ── Interests Section ── */}
+              {activeTab === "interests" && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center flex-row-reverse gap-2">
@@ -294,8 +456,9 @@ export default function Profile() {
               })}
             </div>
           </div>
+              )}
 
-          {/* ── Personal Information Section ── */}
+              {activeTab === "personal-info" && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-bold text-gray-900">
@@ -437,7 +600,137 @@ export default function Profile() {
             )}
           </div>
 
-          {/* ── Saved Posts Section ── */}
+              )}
+
+              {activeTab === "premium" && (
+                <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 space-y-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-5 w-5 text-amber-500" />
+                      <h2 className="text-lg font-bold text-gray-900">
+                        البريميوم
+                      </h2>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        isPremium
+                          ? "bg-teal-50 text-teal-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {isPremium ? "Premium نشط" : "غير مشترك"}
+                    </span>
+                  </div>
+
+                  {premiumSubscription ? (
+                    <div className="space-y-4">
+                      <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 space-y-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {premiumSubscription.subscription_plans?.name ||
+                                "Trendy Premium"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {premiumSubscription.subscription_plans?.slug ||
+                                "premium"}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700">
+                            {premiumSubscription.status === "TRIAL"
+                              ? "تجربة"
+                              : "نشط"}
+                          </span>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-3 text-sm">
+                          <div className="rounded-lg bg-white border border-gray-100 p-3">
+                            <p className="text-xs text-gray-400 mb-1">
+                              تاريخ البدء
+                            </p>
+                            <p className="font-medium text-gray-800">
+                              {formatSubscriptionDate(
+                                premiumSubscription.started_at,
+                              )}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-white border border-gray-100 p-3">
+                            <p className="text-xs text-gray-400 mb-1">
+                              نهاية التجربة
+                            </p>
+                            <p className="font-medium text-gray-800">
+                              {formatSubscriptionDate(
+                                premiumSubscription.trial_ends_at ||
+                                  premiumSubscription.expires_at,
+                              )}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-white border border-gray-100 p-3">
+                            <p className="text-xs text-gray-400 mb-1">
+                              تاريخ الإلغاء
+                            </p>
+                            <p className="font-medium text-gray-800">
+                              {formatSubscriptionDate(
+                                premiumSubscription.cancelled_at,
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          type="button"
+                          onClick={() => setPremiumOpen(true)}
+                          className="cursor-pointer"
+                        >
+                          <Crown className="h-4 w-4" />
+                          فتح مزايا البريميوم
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={handleCancelPremium}
+                          disabled={cancelLoading}
+                          className="cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                          {cancelLoading ? "جارٍ الإلغاء..." : "إلغاء البريميوم"}
+                        </Button>
+                      </div>
+
+                      {cancelError?.message && (
+                        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                          {cancelError.message}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50 p-5 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Crown className="h-5 w-5 text-amber-600" />
+                        <p className="text-sm font-semibold text-amber-900">
+                          جرّب Trendy Premium
+                        </p>
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        فعّل البريميوم للوصول إلى المصادر والأدلة والتحليلات
+                        المتقدمة بدون إعلانات.
+                      </p>
+                      <Button
+                        type="button"
+                        onClick={() => setPremiumOpen(true)}
+                        className="cursor-pointer"
+                      >
+                        <Crown className="h-4 w-4" />
+                        جرّب البريميوم
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "saved-posts" && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
@@ -544,9 +837,12 @@ export default function Profile() {
               </div>
             )}
           </div>
+              )}
 
           {/* Mobile / tablet ads — shown below the profile content */}
           <MobileAdStrip />
+            </div>
+          </div>
         </section>
 
         {/* Left ads sidebar — visible xl only (last 2 ads) */}
@@ -558,6 +854,7 @@ export default function Profile() {
           </aside>
         )}
       </div>
+      <PremiumModal isOpen={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </>
   );
 }

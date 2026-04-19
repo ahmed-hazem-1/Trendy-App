@@ -36,6 +36,7 @@ function mapNewsItem(item) {
     // Derive status from verdict.verdict; fall back to news_items.verification_status
     verification_status:
       verdict?.verdict || item.verification_status || "UNVERIFIED",
+    verificationNumber: item.verification_number ?? 0,
     credibility_score: verdict?.confidence ?? item.credibility_score ?? 0,
     reasoning: verdict?.reasoning || null,
     sources_used: verdict?.sources_used || null,
@@ -227,7 +228,7 @@ export default function Feed() {
         onCategoryChange={handleCategoryChange}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_350px] gap-4 sm:gap-6 pb-20 lg:pb-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_350px] gap-4 sm:gap-6">
         {/* Left Sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar

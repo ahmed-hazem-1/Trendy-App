@@ -9,6 +9,7 @@ import {
   getUserProfile,
   ensureUserProfile,
   upgradeToPremium,
+  cancelSubscription as cancelUserSubscription,
   refreshUserWithSubscriptions,
 } from "../api/authApi";
 import {
@@ -42,12 +43,9 @@ export function useAuthListener() {
   const profile = useSelector(selectProfile);
   profileRef.current = profile;
 
-  // Guard: skip onAuthStateChange SIGNED_IN events while signup is active
-  const signupInProgressRef = useRef(false);
-
-  // Expose the signupInProgressRef so useAuth's signup mutation can set it
-  // via a module-level variable (avoids prop-drilling).
-  _signupInProgressRef = signupInProgressRef;
+  // Guard: skip onAuthStateChange SIGNED_IN events while signup is active.
+  // Use the shared module-level ref so the signup mutation and listener stay in sync.
+  const signupInProgressRef = _signupInProgressRef;
 
   useEffect(() => {
     let mounted = true;
@@ -320,6 +318,22 @@ export function useAuth() {
     },
   });
 
+  const cancelSubscriptionMutation = useMutation({
+    mutationFn: async (subscriptionId) => {
+      if (!subscriptionId) throw new Error("No subscription id");
+      return cancelUserSubscription(subscriptionId);
+    },
+    onSuccess: async () => {
+      if (user?.id) {
+        const updated = await refreshUserWithSubscriptions(
+          user.id,
+          user.email,
+        ).catch(() => null);
+        if (updated) dispatch(setProfile(updated));
+      }
+    },
+  });
+
   return {
     // State
     user,
@@ -335,6 +349,7 @@ export function useAuth() {
     logout: logoutMutation.mutateAsync,
     refreshProfile,
     upgradeToPremium: upgradeMutation.mutateAsync,
+    cancelSubscription: cancelSubscriptionMutation.mutateAsync,
 
     // Mutation states
     loginLoading: loginMutation.isPending,
@@ -344,5 +359,7 @@ export function useAuth() {
     logoutLoading: logoutMutation.isPending,
     upgradeLoading: upgradeMutation.isPending,
     upgradeError: upgradeMutation.error,
+    cancelLoading: cancelSubscriptionMutation.isPending,
+    cancelError: cancelSubscriptionMutation.error,
   };
 }

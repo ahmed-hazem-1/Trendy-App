@@ -27,6 +27,7 @@ import { buildPostShareUrl } from "../features/feed/shareUtils";
 import MobileSidebar from "../UI/MobileSidebar";
 import UserSidebar from "../features/feed/UserSidebar";
 import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
+import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
 import {
   useNewsItem,
@@ -89,6 +90,7 @@ function mapNewsItem(item) {
     sources_used: verdict?.sources_used || null,
     timeAgo: formatTimeAgo(item.ingested_at || item.published_at),
     publishedAt: formatDate(item.published_at || item.ingested_at),
+    verificationNumber: item.verification_number ?? 0,
     category,
     categorySlug,
     imageUrl: item.image_url || null,
@@ -163,6 +165,7 @@ export default function Posts() {
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [lastReactedType, setLastReactedType] = useState(null);
+  const [premiumOpen, setPremiumOpen] = useState(false);
 
   const profile = useSelector(selectProfile);
   const isDemoMode = useSelector(selectIsDemoMode);
@@ -274,7 +277,7 @@ export default function Posts() {
 
         {/* Main article content */}
         <section className="min-w-0">
-          <PremiumBanner />
+          <PremiumBanner onTryPremium={() => setPremiumOpen(true)} />
 
           {/* Back link */}
           <Link
@@ -323,6 +326,13 @@ export default function Posts() {
                   مشاركة
                 </button>
               </div>
+
+              {post.verificationNumber > 0 && (
+                <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                  <span>تم التحقق منه {post.verificationNumber} مرات</span>
+                </div>
+              )}
             </div>
 
             <div className="px-4 sm:px-8 pt-4 sm:pt-6">
@@ -434,12 +444,13 @@ export default function Posts() {
                   <p className="text-sm text-amber-800 mb-4">
                     ترقّ إلى البريميوم للوصول إلى جميع المصادر والأدلة والتحليلات المتقدمة.
                   </p>
-                  <Link
-                    to="/feed"
-                    className="inline-flex items-center gap-2 px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition"
+                  <button
+                    type="button"
+                    onClick={() => setPremiumOpen(true)}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition cursor-pointer"
                   >
                     ترقية إلى البريميوم
-                  </Link>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -721,6 +732,8 @@ export default function Posts() {
         category={post.category}
         description={post.content || ""}
       />
+
+      <PremiumModal isOpen={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </>
   );
 }

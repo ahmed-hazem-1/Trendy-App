@@ -21,7 +21,6 @@ export default function PremiumModal({ isOpen, onClose }) {
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
-      setSuccessMsg(""); // Reset success message on open
     }
     return () => {
       document.removeEventListener("keydown", handleKeyDown);

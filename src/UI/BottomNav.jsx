@@ -10,7 +10,7 @@ export default function BottomNav({ onCategoriesOpen, onAdminModalOpen }) {
   const isAdmin = profile?.role === "ADMIN";
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)]">
       <div className={`grid ${isAdmin ? "grid-cols-5" : "grid-cols-4"} items-center h-16 px-2`}>
         {/* Home Button */}
         <Link

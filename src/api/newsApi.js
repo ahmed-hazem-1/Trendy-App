@@ -226,7 +226,7 @@ export async function fetchNewsItems({
       .from("news_items")
       .select(
         `
-        id, title, content, verification_status, credibility_score,
+        id, title, content, verification_status, verification_number, credibility_score,
         ingested_at, published_at,
         categories (name, slug)
       `,
@@ -321,6 +321,7 @@ export async function fetchNewsItemById(id) {
         content,
         url,
         verification_status,
+        verification_number,
         credibility_score,
         ingested_at,
         published_at,
@@ -375,7 +376,7 @@ export async function fetchTrendingNews(limit = 5) {
     .from("news_items")
     .select(
       `
-      id, title, verification_status, credibility_score, ingested_at,
+      id, title, verification_status, verification_number, credibility_score, ingested_at,
       categories (name, slug)
     `,
     )
@@ -721,7 +722,7 @@ export async function searchNews(
     .from("news_items")
     .select(
       `
-      id, title, content, verification_status, credibility_score,
+      id, title, content, verification_status, verification_number, credibility_score,
       ingested_at, published_at,
       categories!inner (*),
       evidence_items!evidence_items_news_id_fkey (id, url, title, snippet, source_type)

@@ -95,7 +95,7 @@ export function AdCard({ ad, variant = "sidebar" }) {
 }
 
 /* ─── Premium Banner Ad (for mobile / tablet) ─── */
-export function PremiumBanner() {
+export function PremiumBanner({ onTryPremium }) {
   const isPremium = useSelector(selectIsPremium);
 
   // Don't show banner if user is already premium
@@ -117,7 +117,10 @@ export function PremiumBanner() {
             تحليلات متقدمة • تحقق أسرع • بدون إعلانات
           </p>
         </div>
-        <button className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-teal-50 transition cursor-pointer">
+        <button
+          onClick={() => onTryPremium?.()}
+          className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-teal-50 transition cursor-pointer"
+        >
           جرّب
         </button>
       </div>

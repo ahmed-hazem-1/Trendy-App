@@ -29,15 +29,15 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 font-cairo rtl" dir="rtl">
+    <div className="min-h-screen bg-gray-100 font-cairo rtl flex flex-col" dir="rtl">
       {/* Top Navbar matched from User feed */}
       <NavBar onMenuClick={toggleSidebar} />
 
       {/* Main Content Area mirroring Feed layout */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-6 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] lg:py-8">
         
         {/* Same Grid Layout as Feed: Sidebar(270px) + Main Content(1fr) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] gap-4 sm:gap-6 pb-20 lg:pb-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] gap-4 sm:gap-6">
           
           {/* Admin Sidebar (Matches UserSidebar) */}
           <div className="hidden lg:block">
