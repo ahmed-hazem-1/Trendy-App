@@ -38,23 +38,56 @@ import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
-import { useUserBookmarks, useToggleBookmark } from "../hooks/useNews";
+import {
+  useCategories,
+  useUserBookmarks,
+  useToggleBookmark,
+} from "../hooks/useNews";
 import StatusBadge from "../features/feed/StatusBadge";
 import { Link } from "react-router-dom";
 import { selectIsPremium } from "../store/authSlice";
 
-const INTEREST_OPTIONS = [
-  { key: "technology", label: "تكنولوجيا", Icon: Laptop },
-  { key: "politics", label: "سياسة", Icon: Scale },
-  { key: "sports", label: "رياضة", Icon: Trophy },
-  { key: "social", label: "مجتمع", Icon: Users },
-  { key: "economy", label: "اقتصاد", Icon: LineChart },
-  { key: "health", label: "صحة", Icon: Stethoscope },
-  { key: "science", label: "علوم", Icon: Microscope },
-  { key: "entertainment", label: "ترفيه", Icon: Clapperboard },
-  { key: "education", label: "تعليم", Icon: GraduationCap },
-  { key: "environment", label: "بيئة", Icon: Leaf },
-];
+// Shared icon mapping
+const CATEGORY_ICONS = {
+  // English slugs
+  technology: Laptop,
+  tech: Laptop,
+  politics: Scale,
+  sports: Trophy,
+  social: Users,
+  economy: LineChart,
+  health: Stethoscope,
+  science: Microscope,
+  entertainment: Clapperboard,
+  education: GraduationCap,
+  environment: Leaf,
+  other: LayoutGrid,
+  general: LayoutGrid,
+
+  // Arabic names/slugs
+  "تكنولوجيا": Laptop,
+  "سياسة": Scale,
+  "رياضة": Trophy,
+  "مجتمع": Users,
+  "اقتصاد": LineChart,
+  "صحة": Stethoscope,
+  "علوم": Microscope,
+  "ترفيه": Clapperboard,
+  "تعليم": GraduationCap,
+  "بيئة": Leaf,
+  "أخرى": LayoutGrid,
+  "اخرى": LayoutGrid,
+  "عام": LayoutGrid,
+};
+
+const renderCategoryIcon = (cat) => {
+  const key = (cat?.slug || cat?.name || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+  return CATEGORY_ICONS[key] || LayoutGrid;
+};
 
 // Mock user data — replace with real data from Supabase
 const FALLBACK_USER = {
@@ -126,6 +159,8 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [premiumOpen, setPremiumOpen] = useState(false);
+
+  const { data: categories = [] } = useCategories();
 
   // Derive user data from profile (Supabase public.users row)
   const userData = profile
@@ -209,7 +244,8 @@ export default function Profile() {
     if (!profile?.id) return;
     setIsSavingInterests(true);
     try {
-      await updateUserProfile(profile.id, { interests });
+      const validInterestsToSave = interests.filter(id => categories.some(cat => cat.slug === id));
+      await updateUserProfile(profile.id, { interests: validInterestsToSave });
       await refreshProfile();
     } catch (err) {
       console.error("Interests update error:", err);
@@ -391,7 +427,9 @@ export default function Profile() {
                         الاهتمامات
                       </p>
                       <p className="text-lg font-bold text-gray-900">
-                        {interests.length}
+                          {categories.length > 0 
+                            ? interests.filter(id => categories.some(cat => cat.slug === id)).length 
+                            : interests.length}
                       </p>
                     </div>
                     <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
@@ -437,7 +475,10 @@ export default function Profile() {
               اختر المواضيع التي تهمك لتخصيص تجربتك في Trendy
             </p>
             <div className="flex flex-wrap gap-2.5 sm:gap-3">
-              {INTEREST_OPTIONS.map(({ key, label, Icon }) => {
+              {categories.map((category) => {
+                const key = category.slug;
+                const label = category.name;
+                const Icon = renderCategoryIcon(key);
                 const active = interests.includes(key);
                 return (
                   <button

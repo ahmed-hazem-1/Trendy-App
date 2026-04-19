@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCategories } from "../hooks/useNews";
 import { 
   Heart, 
   Laptop, 
@@ -12,24 +13,29 @@ import {
   GraduationCap, 
   Leaf,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Tag
 } from "lucide-react";
 import Button from "./Button";
 
-const INTEREST_OPTIONS = [
-  { key: "technology", label: "تكنولوجيا", Icon: Laptop },
-  { key: "politics", label: "سياسة", Icon: Scale },
-  { key: "sports", label: "رياضة", Icon: Trophy },
-  { key: "social", label: "مجتمع", Icon: Users },
-  { key: "economy", label: "اقتصاد", Icon: LineChart },
-  { key: "health", label: "صحة", Icon: Stethoscope },
-  { key: "science", label: "علوم", Icon: Microscope },
-  { key: "entertainment", label: "ترفيه", Icon: Clapperboard },
-  { key: "education", label: "تعليم", Icon: GraduationCap },
-  { key: "environment", label: "بيئة", Icon: Leaf },
-];
-
 export default function OnboardingInterests({ onComplete, isLoading }) {
+  const { data: categories = [] } = useCategories();
+  
+  const renderCategoryIcon = (key) => {
+    switch (key) {
+      case "technology": return Laptop;
+      case "sports": return Trophy;
+      case "politics": return Scale;
+      case "health": return Stethoscope;
+      case "economy": return LineChart;
+      case "entertainment": return Clapperboard;
+      case "science": return Microscope;
+      case "education": return GraduationCap;
+      case "environment": return Leaf;
+      case "social": return Users;
+      default: return Tag;
+    }
+  };
   const [selected, setSelected] = useState([]);
 
   const toggleInterest = (key) => {
@@ -55,7 +61,10 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
         {/* content */}
         <div className="p-6 sm:p-8">
           <div className="grid grid-cols-2 gap-3 mb-8">
-            {INTEREST_OPTIONS.map(({ key, label, Icon }) => {
+            {categories.map((category) => {
+              const key = category.slug;
+              const label = category.name;
+              const Icon = renderCategoryIcon(key);
               const isActive = selected.includes(key);
               return (
                 <button

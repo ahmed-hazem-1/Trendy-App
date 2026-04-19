@@ -34,7 +34,7 @@ export default function AdminLayout() {
       <NavBar onMenuClick={toggleSidebar} />
 
       {/* Main Content Area mirroring Feed layout */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-6 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] lg:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-6 pt-4 pb-[calc(100px+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(120px+env(safe-area-inset-bottom))] lg:py-8">
         
         {/* Same Grid Layout as Feed: Sidebar(270px) + Main Content(1fr) */}
         <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] gap-4 sm:gap-6">
