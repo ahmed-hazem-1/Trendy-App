@@ -8,6 +8,7 @@ import OnboardingInterests from "./OnboardingInterests";
 import { useAuth } from "../hooks/useAuth";
 import { updateUserProfile } from "../api/authApi";
 import BottomSheet from "./BottomSheet";
+import ScrollToTop from "./ScrollToTop";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,7 +52,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <NavBar onMenuClick={toggleSidebar} />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 lg:px-6 pt-4 pb-[calc(100px+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(120px+env(safe-area-inset-bottom))] lg:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 lg:px-8 pt-4 pb-[calc(100px+env(safe-area-inset-bottom))] sm:pt-6 sm:pb-[calc(120px+env(safe-area-inset-bottom))] lg:py-8">
         <Outlet context={{ sidebarOpen, closeSidebar, bottomSheetOpen, closeBottomSheet, openBottomSheet }} />
       </main>
       <BottomSheet
@@ -61,6 +62,7 @@ export default function AppLayout() {
       />
       <BottomNav onCategoriesOpen={openBottomSheet} onAdminModalOpen={openAdminModal} />
       <AdminModal isOpen={adminModalOpen} onClose={closeAdminModal} />
+      <ScrollToTop />
 
       {needsOnboarding && (
         <OnboardingInterests 

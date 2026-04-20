@@ -8,33 +8,33 @@ export default function NavBar({ onMenuClick }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-white">
-      <nav className="max-w-7xl mx-auto flex items-center justify-between py-2 px-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-xs">
+      <nav className="max-w-6xl w-full mx-auto flex items-center justify-between h-[56px] px-3 sm:px-6 lg:px-8">
         {/* يمين: البرغر + الشعار + البحث (RTL) */}
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-8">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-8 h-full">
           {/* Burger Menu — mobile/tablet only */}
           <button
             onClick={onMenuClick}
-            className="hidden lg:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 transition cursor-pointer"
+            className="hidden lg:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100 transition cursor-pointer"
             aria-label="القائمة"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link to="/feed" className="shrink-0">
+          <Link to="/feed" className="shrink-0 flex items-center h-full ml-2">
             <img
               src="/logo/Trendy - logo - with text.png"
               alt="Trendy"
-              className="h-16 sm:h-16 lg:h-20 w-auto object-contain"
+              className="h-8 sm:h-10 w-auto object-contain scale-[2] sm:scale-150 origin-right"
             />
           </Link>
           {/* Desktop search */}
-          <div className="hidden md:block">
-            <SearchBar />
+          <div className="hidden md:flex items-center h-full">
+            <SearchBar className="h-9" />
           </div>
         </div>
 
         {/* يسار: الإشعارات + المستخدم */}
-        <div className="flex items-center gap-2 sm:gap-5">
+        <div className="flex items-center gap-2 sm:gap-5 h-full">
           {/* Mobile search toggle */}
           <button
             onClick={() => setSearchOpen(!searchOpen)}

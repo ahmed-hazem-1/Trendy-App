@@ -26,7 +26,7 @@ import ShareModal from "../features/feed/ShareModal";
 import { buildPostShareUrl } from "../features/feed/shareUtils";
 import MobileSidebar from "../UI/MobileSidebar";
 import UserSidebar from "../features/feed/UserSidebar";
-import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
+import { AdCard, PremiumBanner, FeedAdStrip } from "../UI/Ads";
 import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
 import {
@@ -266,7 +266,7 @@ export default function Posts() {
         onCategoryChange={setActiveCategory}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 max-w-6xl mx-auto">
         {/* Left (profile/categories) sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar
@@ -695,7 +695,7 @@ export default function Posts() {
             </div>
           </article>
 
-          <MobileAdStrip />
+          <FeedAdStrip />
         </section>
 
         {/* Left ads sidebar — xl only */}

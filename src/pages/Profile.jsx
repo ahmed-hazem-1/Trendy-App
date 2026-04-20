@@ -33,7 +33,7 @@ import FormSelect from "../UI/FormSelect";
 import Button from "../UI/Button";
 import MobileSidebar from "../UI/MobileSidebar";
 import { EGYPT_GOVERNORATES } from "../utils/constants";
-import { AdCard, PremiumBanner, MobileAdStrip } from "../UI/Ads";
+import { AdCard, PremiumBanner, FeedAdStrip } from "../UI/Ads";
 import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
 import { useAuth } from "../hooks/useAuth";
@@ -332,7 +332,7 @@ export default function Profile() {
         className={
           isPremium 
             ? "max-w-3xl mx-auto" 
-            : "grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px] gap-4 lg:gap-5 max-w-6xl mx-auto"
+            : "grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 max-w-6xl mx-auto"
         }
       >
         {/* Right ads sidebar — all 4 ads at lg, only first 2 at xl */}
@@ -880,8 +880,8 @@ export default function Profile() {
           </div>
               )}
 
-          {/* Mobile / tablet ads — shown below the profile content */}
-          <MobileAdStrip />
+          {/* Desktop/Tablet/Mobile ads — shown below the profile content */}
+          <FeedAdStrip />
             </div>
           </div>
         </section>

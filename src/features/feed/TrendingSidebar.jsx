@@ -1,12 +1,18 @@
 import { TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectIsPremium } from "../../store/authSlice";
 import { STATUS_CONFIG } from "./StatusBadge";
+import { AdCard } from "../../UI/Ads";
+import { MOCK_ADS } from "../../utils/adsData";
 
 export default function TrendingSidebar({ trendingItems = [] }) {
+  const isPremium = useSelector(selectIsPremium);
+  
   return (
-    <aside className="sticky top-24 space-y-6 self-start">
+    <aside className="space-y-5 z-10 h-full">
       {/* Trending Now */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className={`rounded-xl border border-gray-200 bg-white p-5 ${isPremium ? 'sticky top-[100px] z-20 shadow-sm' : ''}`}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-base font-bold text-gray-900">الرائج الآن</h3>
           <TrendingUp className="h-5 w-5 text-teal-500" />
@@ -48,8 +54,15 @@ export default function TrendingSidebar({ trendingItems = [] }) {
         )}
       </div>
 
+      {/* Ad Placeholder for Trending Sidebar */}
+      {!isPremium && MOCK_ADS?.[1] && (
+        <div className="hidden xl:block sticky top-[100px] z-20">
+          <AdCard ad={MOCK_ADS[1]} variant="sidebar" />
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="text-center space-y-1 px-2">
+      <div className={`text-center space-y-1 px-2 ${isPremium ? 'sticky hidden xl:block z-10' : ''}`} style={isPremium ? { top: 'calc(100px + 360px)' } : {}}>
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-gray-400">
           <a href="#" className="hover:text-gray-600 transition">
             حول

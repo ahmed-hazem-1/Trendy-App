@@ -6,7 +6,7 @@ import { useAuth } from "../hooks/useAuth";
 import StatusBadge from "../features/feed/StatusBadge";
 import MobileSidebar from "../UI/MobileSidebar";
 import { useState } from "react";
-import { AdCard, MobileAdStrip } from "../UI/Ads";
+import { AdCard, FeedAdStrip } from "../UI/Ads";
 import { MOCK_ADS } from "../utils/adsData";
 import { selectIsPremium } from "../store/authSlice";
 import {
@@ -49,7 +49,7 @@ export default function Saved() {
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
-      <div className={`grid grid-cols-1 ${!isPremium ? 'lg:grid-cols-[240px_1fr] xl:grid-cols-[250px_1fr_250px]' : 'max-w-3xl mx-auto'} gap-4 lg:gap-5 mx-auto`}>
+      <div className={`grid grid-cols-1 gap-4 lg:gap-5 mx-auto w-full ${!isPremium ? 'lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px]' : 'max-w-3xl'}`}>
         {/* Right ads sidebar */}
         {!isPremium && (
           <aside className="hidden lg:block sticky top-24 self-start space-y-4">
@@ -216,8 +216,8 @@ export default function Saved() {
             )}
           </div>
 
-          {/* Mobile ads */}
-          <MobileAdStrip />
+          {/* Ad Strip */}
+          <FeedAdStrip />
         </section>
 
         {/* Left ads sidebar */}

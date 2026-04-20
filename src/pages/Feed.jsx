@@ -18,6 +18,7 @@ import {
 } from "../hooks/useNews";
 import { Loader } from "lucide-react";
 import { selectProfile } from "../store/authSlice";
+import { FeedAdStrip, PremiumBanner } from "../UI/Ads";
 
 function mapNewsItem(item) {
   const categoryMeta = Array.isArray(item.categories)
@@ -228,7 +229,7 @@ export default function Feed() {
         onCategoryChange={handleCategoryChange}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_350px] gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 sm:gap-6">
         {/* Left Sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar
@@ -276,11 +277,13 @@ export default function Feed() {
             </div>
           ) : (
             <div className="space-y-4">
-              {newsItems.map((item) => (
-                <NewsCard
-                  key={item.id}
-                  item={item}
-                />
+              <PremiumBanner />
+              {newsItems.map((item, index) => (
+                <div key={item.id} className="space-y-4">
+                  <NewsCard item={item} />
+                  {/* Show ad strip every 5th post */}
+                  {(index + 1) % 5 === 0 && <FeedAdStrip />}
+                </div>
               ))}
 
               {/* Sentinel + Load-more */}

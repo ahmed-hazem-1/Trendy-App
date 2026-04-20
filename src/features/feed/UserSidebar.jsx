@@ -12,9 +12,13 @@ import {
   Leaf,
 } from "lucide-react";
 
+import { useSelector } from "react-redux";
+import { selectIsPremium } from "../../store/authSlice";
 import ProfileCard from "../../UI/ProfileCard";
 import { useCategories } from "../../hooks/useNews";
 import { useCategoryNavigation } from "../../hooks/useCategoryNavigation";
+import { AdCard } from "../../UI/Ads";
+import { MOCK_ADS } from "../../utils/adsData";
 
 const CATEGORY_ICONS = {
   // English slugs
@@ -68,6 +72,7 @@ export default function UserSidebar({
 }) {
   const { data: categories = [] } = useCategories();
   const navigateToFeedWithCategory = useCategoryNavigation();
+  const isPremium = useSelector(selectIsPremium);
   
   // Smart handler: if onCategoryChange is provided (Feed context), use it
   // Otherwise, navigate to /feed with the category
@@ -80,11 +85,11 @@ export default function UserSidebar({
   };
 
   return (
-    <aside className="">
+    <aside className="space-y-5 z-10 h-full">
       <ProfileCard />
 
       {/* Feeds */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className={`rounded-xl border border-gray-200 bg-white p-5 ${isPremium ? 'sticky top-[100px] z-20 shadow-sm' : ''}`}>
         <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-2">
           التصنيفات
         </h4>
@@ -118,6 +123,13 @@ export default function UserSidebar({
           ))}
         </nav>
       </div>
+
+      {/* Ad Placeholder for Sidebar */}
+      {MOCK_ADS?.[0] && (
+        <div className="hidden lg:block sticky top-[100px] z-20">
+          <AdCard ad={MOCK_ADS[0]} variant="sidebar" />
+        </div>
+      )}
     </aside>
   );
 }
