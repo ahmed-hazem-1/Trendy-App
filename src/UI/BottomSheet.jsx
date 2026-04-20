@@ -55,7 +55,7 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
 
   return (
     <div
-      className={`fixed inset-0 z-[60] lg:hidden transition-[opacity] duration-300 ${
+      className={`fixed inset-0 z-[60] lg:hidden flex items-end md:items-center justify-center transition-[opacity] duration-300 ${
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
       onClick={handleBackdropClick}
@@ -68,19 +68,15 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
         }`}
       />
 
-      {/* Bottom Sheet — slides from bottom */}
+      {/* Bottom Sheet — slides from bottom on mobile, pops up on md */}
       <div
         ref={sheetRef}
-        className={`absolute bottom-0 left-0 right-0 bg-white transition-transform duration-300 rounded-t-3xl max-h-[70vh] overflow-y-auto ${
-          isOpen ? "translate-y-0" : "translate-y-full"
+        className={`relative w-full md:w-[400px] bg-white transition-transform duration-300 rounded-t-3xl md:rounded-3xl max-h-[70vh] md:max-h-[85vh] overflow-y-auto shadow-xl ${
+          isOpen ? "translate-y-0 md:scale-100" : "translate-y-full md:translate-y-0 md:scale-95"
         }`}
-        style={{
-          borderTopLeftRadius: "1.5rem",
-          borderTopRightRadius: "1.5rem",
-        }}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-2">
+        {/* Handle bar - Hide on md */}
+        <div className="flex justify-center pt-3 pb-2 md:hidden">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
         </div>
 
@@ -97,18 +93,20 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
         </div>
 
         {/* Categories */}
-        <div className="px-4 pb-6 pt-4">
-          <nav className="space-y-2">
-            {/* "All" option */}
+        <div className="px-5 pb-6 pt-4">
+          <nav className="grid grid-cols-2 gap-3">
+            {/* "All" option - Always full width */}
             <button
               onClick={() => handleCategoryClick("all")}
-              className={`w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition cursor-pointer ${
+              className={`col-span-2 flex items-center justify-center gap-3 rounded-2xl px-4 py-4 text-sm font-bold transition-all transform active:scale-[0.98] cursor-pointer ${
                 activeCategory === "all"
-                  ? "bg-gradient-to-r from-teal-50 to-emerald-50 text-teal-800 border-2 border-teal-200"
-                  : "text-gray-600 hover:bg-gray-50 border-2 border-transparent"
+                  ? "bg-gradient-to-r from-teal-600 to-emerald-500 text-white shadow-lg shadow-teal-500/25 border-transparent"
+                  : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200/60"
               }`}
             >
-              <LayoutGrid className="h-5 w-5" />
+              <div className={`flex items-center justify-center shrink-0 w-8 h-8 rounded-full ${activeCategory === "all" ? "bg-white/20 text-white" : "bg-white text-teal-600 shadow-sm"}`}>
+                <LayoutGrid className="h-4 w-4" />
+              </div>
               <span className="text-base">كل المواضيع</span>
             </button>
 
@@ -117,14 +115,16 @@ export default function BottomSheet({ isOpen, onClose, activeCategory, onCategor
               <button
                 key={cat.slug}
                 onClick={() => handleCategoryClick(cat.slug)}
-                className={`w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition cursor-pointer ${
+                className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition-all transform active:scale-[0.98] cursor-pointer ${
                   activeCategory === cat.slug
-                    ? "bg-gradient-to-r from-teal-50 to-emerald-50 text-teal-800 border-2 border-teal-200"
-                    : "text-gray-600 hover:bg-gray-50 border-2 border-transparent"
+                    ? "bg-gradient-to-r from-teal-600 to-emerald-500 text-white shadow-md shadow-teal-500/25 border-transparent"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200/60"
                 }`}
               >
-                <span className="text-lg">{cat.emoji || HASH}</span>
-                <span className="text-base">{cat.name}</span>
+                <div className={`flex items-center justify-center shrink-0 w-8 h-8 rounded-full ${activeCategory === cat.slug ? "bg-white/20 text-white" : "bg-white text-teal-600 shadow-sm"}`}>
+                  <span className="text-lg leading-none">{cat.emoji || HASH}</span>
+                </div>
+                <span className="text-sm truncate">{cat.name}</span>
               </button>
             ))}
           </nav>

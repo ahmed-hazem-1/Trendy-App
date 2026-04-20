@@ -229,7 +229,8 @@ export default function Feed() {
         onCategoryChange={handleCategoryChange}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 sm:gap-6">
+      {/* Tablet (md) view is constrained to max-w-2xl (or 3xl) and centered, and restored to max-w-none on lg */}
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 sm:gap-6 md:max-w-2xl lg:max-w-none mx-auto w-full">
         {/* Left Sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar

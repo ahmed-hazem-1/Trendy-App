@@ -266,7 +266,7 @@ export default function Posts() {
         onCategoryChange={setActiveCategory}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 md:max-w-2xl lg:max-w-6xl mx-auto w-full">
         {/* Left (profile/categories) sidebar — hidden on mobile */}
         <div className="hidden lg:block">
           <UserSidebar

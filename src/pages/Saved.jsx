@@ -49,7 +49,7 @@ export default function Saved() {
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
-      <div className={`grid grid-cols-1 gap-4 lg:gap-5 mx-auto w-full ${!isPremium ? 'lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px]' : 'max-w-3xl'}`}>
+      <div className={`grid grid-cols-1 gap-4 lg:gap-5 mx-auto w-full ${!isPremium ? 'lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] md:max-w-2xl lg:max-w-6xl' : 'max-w-3xl'}`}>
         {/* Right ads sidebar */}
         {!isPremium && (
           <aside className="hidden lg:block sticky top-24 self-start space-y-4">

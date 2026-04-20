@@ -332,7 +332,7 @@ export default function Profile() {
         className={
           isPremium 
             ? "max-w-3xl mx-auto" 
-            : "grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 max-w-6xl mx-auto"
+            : "grid grid-cols-1 lg:grid-cols-[270px_1fr] xl:grid-cols-[270px_1fr_270px] gap-4 lg:gap-5 md:max-w-2xl lg:max-w-6xl mx-auto w-full"
         }
       >
         {/* Right ads sidebar — all 4 ads at lg, only first 2 at xl */}
