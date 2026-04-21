@@ -4,7 +4,6 @@ const FILTERS = [
   { key: "ALL", label: "الكل", icon: null },
   { key: "VERIFIED", label: "متحقق", icon: CheckCircle },
   { key: "UNVERIFIED", label: "غير متحقق", icon: AlertTriangle },
-  { key: "MISLEADING", label: "مضلل", icon: ShieldAlert },
   { key: "FAKE", label: "مزيف", icon: XCircle },
 ];
 

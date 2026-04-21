@@ -149,7 +149,6 @@ const VERDICT_ICON = {
   VERIFIED: CheckCircle2,
   FALSE: XCircle,
   FAKE: XCircle,
-  MISLEADING: AlertTriangle,
   UNVERIFIED: HelpCircle,
   INCONCLUSIVE: HelpCircle,
 };

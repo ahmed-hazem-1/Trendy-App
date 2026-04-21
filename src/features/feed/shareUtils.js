@@ -3,7 +3,6 @@ const STATUS_LABELS_AR = {
   TRUE: "متحقق",
   FAKE: "مزيف",
   FALSE: "مزيف",
-  MISLEADING: "مضلل",
   UNVERIFIED: "غير متحقق",
   INCONCLUSIVE: "غير حاسم",
 };

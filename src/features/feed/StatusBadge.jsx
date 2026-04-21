@@ -14,13 +14,6 @@ const STATUS_CONFIG = {
     dot: "bg-red-500",
     border: "border-red-200",
   },
-  MISLEADING: {
-    label: "مضلل",
-    bg: "bg-orange-50",
-    text: "text-orange-700",
-    dot: "bg-orange-500",
-    border: "border-orange-200",
-  },
   UNVERIFIED: {
     label: "غير متحقق",
     bg: "bg-yellow-50",

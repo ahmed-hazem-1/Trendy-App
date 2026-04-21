@@ -47,13 +47,12 @@ async function attachVerdicts(newsItems, existingVerdictMap) {
 const VERDICT_ALIASES = {
   VERIFIED: ["VERIFIED", "TRUE"],
   FAKE: ["FAKE", "FALSE"],
-  MISLEADING: ["MISLEADING"],
 };
 
 /**
  * Pre-fetch verdict IDs for server-side filtering (see PRD §9.4).
  *
- * - Specific status (VERIFIED, FAKE, MISLEADING): fetch matching verdict
+ * - Specific status (VERIFIED, FAKE): fetch matching verdict
  *   news_ids → mode "include" (only show those items).
  * - UNVERIFIED: fetch ALL verdict news_ids → mode "exclude" (show items
  *   that have no verdict).
