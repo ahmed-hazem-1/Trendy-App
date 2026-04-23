@@ -126,8 +126,13 @@ export default function Feed() {
       .flatMap((page) => page.data || [])
       .map(mapNewsItem);
 
-    // If we're searching, don't inject trending items as it might break relevance
-    if (searchTerm.trim().length >= 2) return regularItems;
+    // Only inject trending items if there are no active filters and no search term
+    const isDefaultView = 
+      searchTerm.trim().length < 2 && 
+      activeFilter === "ALL" && 
+      activeCategory === "all";
+
+    if (!isDefaultView) return regularItems;
 
     const trendingMappedForFeed = trendingItems.map(mapNewsItem);
 
@@ -139,7 +144,7 @@ export default function Feed() {
       seenIds.add(item.id);
       return true;
     });
-  }, [newsData, trendingItems, searchTerm]);
+  }, [newsData, trendingItems, searchTerm, activeFilter, activeCategory]);
 
   // IDs of all visible items — kept for the sentinel re-check useEffect dep
   const newsItemCount = newsItems.length;

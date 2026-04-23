@@ -168,40 +168,38 @@ async function _fetchVerdictsWithRetry(verificationStatus) {
 }
 
 /**
- * Cache for category slug -> id mapping to avoid redundant queries.
+ * Global cache for all active categories to prevent multiple concurrent queries
  */
-const categoryCache = new Map();
+let globalCategoriesCache = null;
+let lastCategoryFetchTime = 0;
 
 /**
- * Fetch a category ID by slug. Uses caching to avoid redundant queries.
+ * Fetch all categories once and find IDs in memory
  */
-async function getCategoryIdBySlug(slug) {
-  if (!slug || slug === "all" || slug === "economy") return null;
-
-  // Check cache first
-  if (categoryCache.has(slug)) {
-    return categoryCache.get(slug);
+async function getAllCategoriesMap() {
+  const now = Date.now();
+  // Cache for 30 minutes
+  if (globalCategoriesCache && now - lastCategoryFetchTime < 30 * 60 * 1000) {
+    return globalCategoriesCache;
   }
 
   try {
     const { data, error } = await supabase
       .from("categories")
-      .select("id")
-      .eq("slug", slug)
-      .eq("is_active", true)
-      .maybeSingle();
+      .select("id, slug")
+      .eq("is_active", true);
 
-    if (error) {
-      console.error(`Failed to fetch category ID for slug "${slug}":`, error);
-      return null;
-    }
-
-    const categoryId = data?.id || null;
-    categoryCache.set(slug, categoryId);
-    return categoryId;
+    if (error) throw error;
+    
+    const catMap = new Map();
+    (data || []).forEach(c => catMap.set(c.slug, c.id));
+    
+    globalCategoriesCache = catMap;
+    lastCategoryFetchTime = now;
+    return catMap;
   } catch (err) {
-    console.error(`Error fetching category ID for slug "${slug}":`, err);
-    return null;
+    console.error("Failed to fetch global categories:", err);
+    return new Map();
   }
 }
 
@@ -233,27 +231,39 @@ export async function fetchNewsItems({
       )
       .order("ingested_at", { ascending: false });
 
+    const allCatsMap = await getAllCategoriesMap();
+
     // Category filtering (slug or list) - filter by category_id directly
     if (categorySlug && categorySlug !== "all") {
-      const categoryId = await getCategoryIdBySlug(categorySlug);
-      if (categoryId !== null) {
-        query = query.eq("category_id", categoryId);
+      if (categorySlug === "other") {
+        query = query.is("category_id", null);
       } else {
-        // If category not found, return empty results instead of showing all
-        return { data: [], count: 0, page, pageSize };
+        const categoryId = categorySlug === "economy" ? null : allCatsMap.get(categorySlug);
+        if (categoryId != null) {
+          query = query.eq("category_id", categoryId);
+        } else {
+          // If category not found, return empty results instead of showing all
+          return { data: [], count: 0, page, pageSize };
+        }
       }
     } else if (categorySlugs && categorySlugs.length > 0) {
-      // Fetch all category IDs for multiple filters
-      const categoryIds = await Promise.all(
-        categorySlugs.map((slug) => getCategoryIdBySlug(slug))
-      );
-      // Filter out null values to avoid breaking the query
-      const validIds = categoryIds.filter((id) => id !== null);
+      // Fetch all category IDs for multiple filters from cache
+      const validIds = categorySlugs
+        .filter(slug => slug !== "economy")
+        .map(slug => allCatsMap.get(slug))
+        .filter(id => id != null);
+        
       if (validIds.length > 0) {
         query = query.in("category_id", validIds);
       } else {
         // If no valid categories found, return empty results
         return { data: [], count: 0, page, pageSize };
+      }
+    } else {
+      // Always exclude economy by default if no specific category is requested
+      const economyId = allCatsMap.get("economy");
+      if (economyId != null) {
+        query = query.neq("category_id", economyId);
       }
     }
 
@@ -732,41 +742,45 @@ export async function searchNews(
     .or(`title.ilike.${pattern},content.ilike.${pattern}`)
     .order("ingested_at", { ascending: false });
 
+  const allCatsMap = await getAllCategoriesMap();
+
   // Always exclude economy category posts from search
-  const economyId = await getCategoryIdBySlug("economy");
-  if (economyId) {
+  const economyId = allCatsMap.get("economy");
+  if (economyId != null) {
     q = q.neq("category_id", economyId);
   }
 
   // Category filtering - filter by category_id directly
   if (categorySlug && categorySlug !== "all") {
-    const categoryId = await getCategoryIdBySlug(categorySlug);
-    if (categoryId !== null) {
-      q = q.eq("category_id", categoryId);
+    if (categorySlug === "other") {
+      q = q.is("category_id", null);
     } else {
-      // If category not found, return empty results
-      return { data: [], count: 0 };
-    }
-    } else {
-      // Always exclude economy by default if no specific category is requested
-      const economyId = await getCategoryIdBySlug("economy");
-      if (economyId) {
-        query = query.neq("category_id", economyId);
+      const categoryId = categorySlug === "economy" ? null : allCatsMap.get(categorySlug);
+      if (categoryId != null) {
+        q = q.eq("category_id", categoryId);
+      } else {
+        // If category not found, return empty results
+        return { data: [], count: 0 };
       }
     }
-
-    if (categorySlugs && categorySlugs.length > 0) {
-      // Fetch all category IDs for multiple filters
-      const categoryIds = await Promise.all(
-        categorySlugs.map((slug) => getCategoryIdBySlug(slug))
-      );
-    // Filter out null values to avoid breaking the query
-    const validIds = categoryIds.filter((id) => id !== null);
+  } else if (categorySlugs && categorySlugs.length > 0) {
+    // Fetch all category IDs for multiple filters from cache
+    const validIds = categorySlugs
+      .filter(slug => slug !== "economy")
+      .map(slug => allCatsMap.get(slug))
+      .filter(id => id != null);
+      
     if (validIds.length > 0) {
       q = q.in("category_id", validIds);
     } else {
       // If no valid categories found, return empty results
       return { data: [], count: 0 };
+    }
+  } else {
+    // Always exclude economy by default if no specific category is requested
+    const defaultEconomyId = allCatsMap.get("economy");
+    if (defaultEconomyId != null) {
+      q = q.neq("category_id", defaultEconomyId);
     }
   }
 
