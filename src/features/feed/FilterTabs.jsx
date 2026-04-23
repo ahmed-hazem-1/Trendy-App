@@ -11,7 +11,7 @@ export default function FilterTabs({ active = "ALL", onChange }) {
   return (
     <div className="mb-4 sm:mb-6">
       {/* Section Title - Mobile Only */}
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 lg:hidden">
+      <h3 className="text-[10px] font-bold text-teal-600/80 uppercase tracking-widest mb-2.5 lg:hidden px-1">
         حالة التحقق
       </h3>
       
@@ -20,14 +20,16 @@ export default function FilterTabs({ active = "ALL", onChange }) {
           <button
             key={key}
             onClick={() => onChange(key)}
-            className={`flex items-center gap-2 rounded-full border-2 px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`flex items-center gap-2 rounded-full border px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-bold transition-all transform active:scale-95 cursor-pointer whitespace-nowrap shrink-0 ${
               active === key
-                ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-teal-500 scale-105"
-                : "bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:bg-teal-50/30"
+                ? "bg-teal-600 text-white border-teal-500 shadow-lg shadow-teal-600/20"
+                : "bg-gray-900 text-gray-300 border-gray-800 hover:border-gray-700 hover:bg-gray-800 hover:text-white"
             }`}
           >
-            {label}
-            {Icon && <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />}
+            <span className="relative z-10">{label}</span>
+            {Icon && (
+              <Icon className={`h-4 w-4 sm:h-4.5 sm:w-4.5 relative z-10 transition-colors ${active === key ? "text-white" : "text-gray-400 group-hover:text-white"}`} />
+            )}
           </button>
         ))}
       </div>

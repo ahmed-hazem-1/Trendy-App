@@ -18,7 +18,7 @@ export default function AppLayout() {
   const [isOnboardingLoading, setIsOnboardingLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
-  
+
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
   const openBottomSheet = () => setBottomSheetOpen(true);
@@ -28,16 +28,16 @@ export default function AppLayout() {
 
   // Check if user needs onboarding (authenticated, has profile, but interests is empty)
   // We only show this if the profile has been loaded and explicitly has an empty/null interests field
-  const needsOnboarding = 
-    isAuthenticated && 
-    profile && 
+  const needsOnboarding =
+    isAuthenticated &&
+    profile &&
     (!profile.interests || profile.interests.length === 0);
 
   const handleOnboardingComplete = async (interests) => {
     if (!profile?.id) return;
     setIsOnboardingLoading(true);
     try {
-      await updateUserProfile(profile.id, { 
+      await updateUserProfile(profile.id, {
         interests,
         status: 'ACTIVE' // Promote from PENDING if needed
       });
@@ -65,9 +65,9 @@ export default function AppLayout() {
       <ScrollToTop />
 
       {needsOnboarding && (
-        <OnboardingInterests 
-          onComplete={handleOnboardingComplete} 
-          isLoading={isOnboardingLoading} 
+        <OnboardingInterests
+          onComplete={handleOnboardingComplete}
+          isLoading={isOnboardingLoading}
         />
       )}
     </div>

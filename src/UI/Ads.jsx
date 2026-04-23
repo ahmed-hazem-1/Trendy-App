@@ -118,24 +118,27 @@ export function PremiumBanner({ onTryPremium }) {
   if (isPremium) return null;
 
   return (
-    <div className="lg:hidden mb-4 rounded-2xl bg-linear-to-r from-teal-600 to-emerald-500 p-4 text-white relative overflow-hidden">
-      {/* Decorative circles */}
-      <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
-      <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-white/10" />
+    <div className="lg:hidden mb-6 rounded-3xl bg-gray-900 border border-gray-800 p-5 text-white relative overflow-hidden shadow-2xl group">
+      {/* Dynamic background element */}
+      <div className="absolute inset-0 bg-gradient-to-br from-teal-600/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+      
+      {/* Decorative background circles */}
+      <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-teal-500/5 blur-3xl" />
+      <div className="absolute -bottom-10 -right-10 w-24 h-24 rounded-full bg-teal-600/5 blur-2xl" />
 
-      <div className="relative flex items-center gap-3">
-        <div className="w-10 h-10 shrink-0 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <Crown className="h-5 w-5" />
+      <div className="relative flex items-center gap-4">
+        <div className="w-12 h-12 shrink-0 rounded-2xl bg-teal-600/20 text-teal-400 flex items-center justify-center border border-teal-500/20 shadow-inner">
+          <Crown className="h-6 w-6" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold">Trendy Premium</h4>
-          <p className="text-xs text-white/80 line-clamp-1">
+          <h4 className="text-sm sm:text-base font-bold text-white tracking-tight">Trendy Premium</h4>
+          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1 font-medium">
             تحليلات متقدمة • تحقق أسرع • بدون إعلانات
           </p>
         </div>
         <button
           onClick={() => onTryPremium?.()}
-          className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-teal-50 transition cursor-pointer"
+          className="shrink-0 bg-teal-600 hover:bg-teal-500 text-white text-xs sm:text-sm font-bold px-5 py-2.5 rounded-xl transition-all active:scale-95 shadow-lg shadow-teal-600/20 cursor-pointer"
         >
           جرّب
         </button>
