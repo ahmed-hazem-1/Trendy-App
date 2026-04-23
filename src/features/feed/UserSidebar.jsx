@@ -98,7 +98,7 @@ export default function UserSidebar({
           {/* "All" option */}
           <button
             onClick={() => handleCategorySelect("all")}
-            className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
+            className={`w-full flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
               activeCategory === "all"
                 ? "bg-teal-50 text-teal-800"
                 : "text-gray-600 hover:bg-gray-50"
@@ -112,7 +112,7 @@ export default function UserSidebar({
             <button
               key={cat.slug}
               onClick={() => handleCategorySelect(cat.slug)}
-              className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
+              className={`w-full flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
                 activeCategory === cat.slug
                   ? "bg-teal-50 text-teal-800"
                   : "text-gray-600 hover:bg-gray-50"

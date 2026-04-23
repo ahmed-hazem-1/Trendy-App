@@ -96,7 +96,7 @@ export function AdCard({ ad, variant = "sidebar" }) {
 
         {/* CTA button */}
         <button
-          className={`mt-2 w-full text-center rounded-xl bg-linear-to-r ${ad.gradient} px-4 py-2 text-xs font-semibold text-white ${ad.ctaHover} hover:transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5`}
+          className={`mt-2 w-full text-center rounded-full bg-linear-to-r ${ad.gradient} px-4 py-2 text-xs font-semibold text-white ${ad.ctaHover} hover:transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5`}
         >
           {ad.cta}
           <ExternalLink className="h-3 w-3 opacity-70" />
@@ -135,7 +135,7 @@ export function PremiumBanner({ onTryPremium }) {
         </div>
         <button
           onClick={() => onTryPremium?.()}
-          className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-teal-50 transition cursor-pointer"
+          className="shrink-0 bg-white text-teal-700 text-xs font-bold px-3 py-1.5 rounded-full hover:bg-teal-50 transition cursor-pointer"
         >
           جرّب
         </button>

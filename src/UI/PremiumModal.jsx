@@ -127,7 +127,7 @@ export default function PremiumModal({ isOpen, onClose }) {
             <button
               onClick={onClose}
               disabled={upgradeLoading}
-              className="flex-1 h-11 sm:h-12 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer disabled:opacity-50"
+              className="flex-1 h-11 sm:h-12 rounded-full border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer disabled:opacity-50"
             >
               {isPremium ? "إغلاق" : "لاحقاً"}
             </button>
@@ -135,7 +135,7 @@ export default function PremiumModal({ isOpen, onClose }) {
               <button
                 onClick={handleSubscribe}
                 disabled={upgradeLoading}
-                className="group relative flex-1 h-11 sm:h-12 rounded-xl bg-teal-600 text-white font-semibold transition cursor-pointer hover:brightness-110 active:scale-[0.99] overflow-hidden disabled:opacity-75 disabled:cursor-not-allowed"
+                className="group relative flex-1 h-11 sm:h-12 rounded-full bg-teal-600 text-white font-semibold transition cursor-pointer hover:brightness-110 active:scale-[0.99] overflow-hidden disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <span className="pointer-events-none absolute inset-0 bg-white/15 backdrop-blur-[1px] opacity-0 transition duration-200 group-hover:opacity-100" />
                 <span className="relative">

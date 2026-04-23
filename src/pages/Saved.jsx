@@ -94,7 +94,7 @@ export default function Saved() {
                 </p>
                 <Link
                   to="/feed"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-full hover:transition"
                 >
                   استكشف الأخبار
                 </Link>
@@ -195,14 +195,14 @@ export default function Saved() {
                         <div className="flex flex-col gap-2 shrink-0 self-center opacity-0 group-hover/card:opacity-100 transition-opacity">
                           <Link
                             to={`/posts/${newsItem.id}`}
-                            className="p-2.5 rounded-xl bg-white text-gray-400 border border-gray-100 hover:text-teal-600 hover:border-teal-200 transition-all hover:scale-110"
+                            className="p-2.5 rounded-full bg-white text-gray-400 border border-gray-100 hover:text-teal-600 hover:border-teal-200 transition-all hover:scale-110"
                             title="عرض الخبر"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => handleRemoveBookmark(newsItem.id)}
-                            className="p-2.5 rounded-xl bg-white text-gray-400 border border-gray-100 hover:text-red-600 hover:border-red-200 transition-all hover:scale-110"
+                            className="p-2.5 rounded-full bg-white text-gray-400 border border-gray-100 hover:text-red-600 hover:border-red-200 transition-all hover:scale-110"
                             title="إزالة من المحفوظات"
                           >
                             <Trash2 className="h-4 w-4" />

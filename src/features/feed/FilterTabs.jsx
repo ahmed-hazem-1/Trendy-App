@@ -20,7 +20,7 @@ export default function FilterTabs({ active = "ALL", onChange }) {
           <button
             key={key}
             onClick={() => onChange(key)}
-            className={`flex items-center gap-2 rounded-xl border-2 px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`flex items-center gap-2 rounded-full border-2 px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               active === key
                 ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white border-teal-500 scale-105"
                 : "bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:bg-teal-50/30"

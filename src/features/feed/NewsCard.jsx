@@ -177,12 +177,14 @@ function NewsCard({ item }) {
               <button
                 onClick={handleBookmark}
                 title={isBookmarked ? "إزالة من المحفوظات" : "حفظ"}
-                className={`p-1 sm:p-1.5 rounded-lg transition cursor-pointer ${
+                className={`p-1 sm:p-1.5 rounded-full transition cursor-pointer ${
                   isBookmarked
                     ? "text-teal-600 bg-teal-50 hover:bg-teal-100"
                     : "text-gray-400 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
+>>>>+++ REPLACE
+
                 {isBookmarked ? (
                   <BookmarkCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 ) : (

@@ -107,7 +107,7 @@ export default function AdManager() {
               </div>
             </div>
             <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-               <Button onClick={handleCreateAd} isLoading={isLoading} className="bg-teal-600 hover:bg-teal-700 text-white px-8 h-12 rounded-xl text-sm">
+               <Button onClick={handleCreateAd} isLoading={isLoading} className="bg-teal-600 hover:bg-teal-700 text-white px-8 h-12 rounded-full text-sm">
                   إطلاق الحملة الإعلانية
                </Button>
             </div>
@@ -175,7 +175,7 @@ export default function AdManager() {
                   <div className="px-4 pt-3 text-start">
                     <h4 className="font-bold text-gray-900 text-[15px] leading-tight mb-1">{adForm.title || 'عنوان الحملة الإعلانية'}</h4>
                     <p className="text-[11px] text-gray-500 mb-3 leading-relaxed">{adForm.description || 'اكتب وصف جذاب لحملتك لزيادة فرص النقرات والتحويل...'}</p>
-                    <button className="w-full bg-teal-600 text-white rounded-xl py-2.5 text-[12px] font-bold">{adForm.cta_text || 'عرض التفاصيل'}</button>
+                    <button className="w-full bg-teal-600 text-white rounded-full py-2.5 text-[12px] font-bold">{adForm.cta_text || 'عرض التفاصيل'}</button>
                   </div>
                 </div>
 

@@ -126,7 +126,7 @@ function ProfileTabNav({ activeTab, onTabChange, vertical = false }) {
             key={key}
             type="button"
             onClick={() => onTabChange(key)}
-            className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
+            className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
               vertical
                 ? `w-full justify-start border ${
                     active
@@ -859,14 +859,14 @@ export default function Profile() {
                         <div className="flex items-center gap-2 shrink-0">
                           <Link
                             to={`/posts/${newsItem.id}`}
-                            className="p-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-white transition"
+                            className="p-2 rounded-full text-gray-400 hover:text-teal-600 hover:bg-white transition"
                             title="عرض الخبر"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                           <button
                             onClick={() => handleRemoveBookmark(newsItem.id)}
-                            className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-white transition"
+                            className="p-2 rounded-full text-gray-400 hover:text-red-600 hover:bg-white transition"
                             title="إزالة من المحفوظات"
                           >
                             <Trash2 className="h-4 w-4" />

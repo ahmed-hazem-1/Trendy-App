@@ -214,10 +214,10 @@ export default function ShareModal({ isOpen, onClose, postUrl, postTitle }) {
             </div>
             <button
               onClick={handleCopy}
-              className={`shrink-0 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer order-2 xs:order-none ${
+              className={`shrink-0 px-3 py-2 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer order-2 xs:order-none ${
                 copied
-                  ? "bg-green-500 text-white"
-                  : "bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white"
+                  ? "bg-green-500 text-white shadow-md"
+                  : "bg-gray-900 hover:bg-teal-600 active:bg-teal-700 text-white shadow-md border border-gray-800"
               }`}
             >
               {copied ? (
