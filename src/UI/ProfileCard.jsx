@@ -25,18 +25,18 @@ export default function ProfileCard() {
   }
 
   return (
-    <div className="group relative h-64 rounded-3xl overflow-hidden mb-5 cursor-pointer shadow-sm border border-gray-100">
+    <div className="group relative h-64 rounded-3xl overflow-hidden mb-5 cursor-pointer shadow-lg border border-white/5">
       {/* Background Gradient */}
-      <div className={`absolute inset-0 bg-linear-to-br ${isAdmin ? 'from-slate-700 to-slate-900' : 'from-teal-500 to-emerald-700'} opacity-90 transition-transform duration-700 group-hover:scale-105`} />
+      <div className={`absolute inset-0 bg-linear-to-br ${isAdmin ? 'from-slate-800 to-gray-900' : 'from-[#0f2035] to-[#0a1628]'} transition-transform duration-700 group-hover:scale-105`} />
       
       {/* Decorative background shapes */}
-      <div className="absolute inset-0 opacity-30 mix-blend-overlay">
-        <div className="absolute top-10 -right-10 w-40 h-40 rounded-full bg-white blur-3xl" />
-        <div className="absolute bottom-20 -left-10 w-40 h-40 rounded-full bg-black blur-3xl" />
+      <div className="absolute inset-0 opacity-40 mix-blend-overlay">
+        <div className="absolute top-10 -right-10 w-40 h-40 rounded-full bg-teal-500/20 blur-3xl" />
+        <div className="absolute bottom-20 -left-10 w-40 h-40 rounded-full bg-blue-900/40 blur-3xl" />
       </div>
 
       {/* Bottom Dark Gradient Fade */}
-      <div className="absolute inset-0 bg-linear-to-t from-gray-900/95 via-gray-900/40 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-[#0a1628] via-[#0a1628]/60 to-transparent" />
 
       {/* Top Logout Button / User Icon */}
       {isAuthenticated ? (

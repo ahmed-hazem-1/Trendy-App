@@ -2,6 +2,7 @@ import { X, LayoutGrid } from "lucide-react";
 import { useEffect, useRef } from "react";
 import ProfileCard from "./ProfileCard";
 import { useCategories } from "../hooks/useNews";
+import { getCategoryIcon } from "../utils/categoryIcons";
 
 const HASH = <span className="text-sm font-semibold">#</span>;
 
@@ -50,17 +51,17 @@ export default function MobileSidebar({
       {/* Sidebar panel — slides from right (RTL) */}
       <div
         ref={sidebarRef}
-        className="absolute top-0 right-0 h-full w-70 sm:w-80 bg-gray-50 mobile-sidebar-enter overflow-y-auto"
+        className="absolute top-0 right-0 h-full w-70 sm:w-80 bg-gray-900 mobile-sidebar-enter overflow-y-auto border-l border-gray-800 shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-900 border-b border-gray-800/50">
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
-          <h3 className="text-sm font-bold text-gray-800">القائمة</h3>
+          <h3 className="text-sm font-bold text-white">القائمة</h3>
           <div className="w-8" />
         </div>
 
@@ -70,22 +71,24 @@ export default function MobileSidebar({
         </div>
 
         {/* Categories */}
-        <div className="px-4 pb-6">
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2">
+        <div className="px-4 pb-8">
+          <div className="rounded-2xl border border-gray-800 bg-gray-800/30 p-4">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 px-2">
               التصنيفات
             </h4>
-            <nav className="space-y-1">
+            <nav className="space-y-1.5">
               {/* "All" option */}
               <button
                 onClick={() => handleCategoryClick("all")}
-                className={`w-full flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
+                className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition cursor-pointer active:scale-[0.98] ${
                   activeCategory === "all"
-                    ? "bg-teal-50 text-teal-800"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-teal-900/30 text-teal-400 border border-teal-500/20 shadow-sm"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-gray-200 border border-transparent"
                 }`}
               >
-                <LayoutGrid className="h-4 w-4" />
+                <div className={`p-1.5 rounded-lg ${activeCategory === "all" ? "bg-teal-500/20" : "bg-gray-700/30"}`}>
+                  <LayoutGrid className="h-4 w-4" />
+                </div>
                 كل المواضيع
               </button>
               {/* Dynamic categories from DB */}
@@ -93,13 +96,15 @@ export default function MobileSidebar({
                 <button
                   key={cat.slug}
                   onClick={() => handleCategoryClick(cat.slug)}
-                  className={`w-full flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition cursor-pointer ${
+                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition cursor-pointer active:scale-[0.98] ${
                     activeCategory === cat.slug
-                      ? "bg-teal-50 text-teal-800"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-teal-900/30 text-teal-400 border border-teal-500/20 shadow-sm"
+                      : "text-gray-400 hover:bg-gray-800 hover:text-gray-200 border border-transparent"
                   }`}
                 >
-                  {HASH}
+                  <div className={`flex items-center justify-center w-7 h-7 rounded-lg ${activeCategory === cat.slug ? "bg-teal-500/20" : "bg-gray-700/30"}`}>
+                    <span className="text-base leading-none">{cat.emoji || getCategoryIcon(cat.slug || cat.name)}</span>
+                  </div>
                   {cat.name}
                 </button>
               ))}
