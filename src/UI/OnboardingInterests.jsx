@@ -14,7 +14,8 @@ import {
   Leaf,
   ArrowLeft,
   CheckCircle2,
-  Tag
+  Tag,
+  Shirt
 } from "lucide-react";
 import Button from "./Button";
 
@@ -32,6 +33,7 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
       case "education": return GraduationCap;
       case "environment": return Leaf;
       case "social": return Users;
+      case "fashion": return Shirt;
       default: return Tag;
     }
   };

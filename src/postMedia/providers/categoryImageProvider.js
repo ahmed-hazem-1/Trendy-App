@@ -7,6 +7,7 @@ import sportsImage from "../../images/Sports.png";
 import healthImage from "../../images/Health.png";
 import entertainmentImage from "../../images/Entertainment.png";
 import otherImage from "../../images/Other.png";
+import fashionImage from "../../images/Fashion.png";
 
 const CATEGORY_IMAGE_ASSETS = {
   politics: politicsImage,
@@ -17,6 +18,7 @@ const CATEGORY_IMAGE_ASSETS = {
   sports: sportsImage,
   health: healthImage,
   entertainment: entertainmentImage,
+  fashion: fashionImage,
   other: otherImage,
 };
 
@@ -29,6 +31,7 @@ const CATEGORY_ALIASES = {
   sports: ["sports", "sport"],
   health: ["health", "medical"],
   entertainment: ["entertainment", "movies", "music", "culture"],
+  fashion: ["fashion", "style", "clothing", "apparel"],
   other: ["other", "general", "unknown", "all"],
 };
 

@@ -10,6 +10,7 @@ import {
   Clapperboard,
   GraduationCap,
   Leaf,
+  Shirt,
 } from "lucide-react";
 
 import { useSelector } from "react-redux";
@@ -32,6 +33,7 @@ const CATEGORY_ICONS = {
   entertainment: Clapperboard,
   education: GraduationCap,
   environment: Leaf,
+  fashion: Shirt,
   other: LayoutGrid,
   general: LayoutGrid,
 
@@ -45,6 +47,7 @@ const CATEGORY_ICONS = {
   "ترفيه": Clapperboard,
   "تعليم": GraduationCap,
   "بيئة": Leaf,
+  "موضة": Shirt,
   "أخرى": LayoutGrid,
   "اخرى": LayoutGrid,
   "عام": LayoutGrid,

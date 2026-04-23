@@ -414,6 +414,16 @@ export async function fetchCategories() {
     .order("display_order", { ascending: true });
 
   if (error) throw error;
+  
+  // Explicitly add "Other" category to the list for UI display if not in DB
+  const hasOther = data.some(cat => cat.slug === 'other' || cat.slug === 'other-category');
+  if (!hasOther) {
+    return [
+      ...data,
+      { id: 'other', name: 'أخرى', slug: 'other', is_active: true }
+    ];
+  }
+  
   return data;
 }
 

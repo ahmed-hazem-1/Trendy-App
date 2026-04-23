@@ -24,6 +24,7 @@ import {
   GraduationCap,
   Leaf,
   Crown,
+  Shirt,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
@@ -60,6 +61,7 @@ const CATEGORY_ICONS = {
   entertainment: Clapperboard,
   education: GraduationCap,
   environment: Leaf,
+  fashion: Shirt,
   other: LayoutGrid,
   general: LayoutGrid,
 
@@ -73,6 +75,7 @@ const CATEGORY_ICONS = {
   "ترفيه": Clapperboard,
   "تعليم": GraduationCap,
   "بيئة": Leaf,
+  "موضة": Shirt,
   "أخرى": LayoutGrid,
   "اخرى": LayoutGrid,
   "عام": LayoutGrid,
