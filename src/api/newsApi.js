@@ -176,7 +176,7 @@ const categoryCache = new Map();
  * Fetch a category ID by slug. Uses caching to avoid redundant queries.
  */
 async function getCategoryIdBySlug(slug) {
-  if (!slug || slug === "all") return null;
+  if (!slug || slug === "all" || slug === "economy") return null;
 
   // Check cache first
   if (categoryCache.has(slug)) {
@@ -226,7 +226,7 @@ export async function fetchNewsItems({
       .select(
         `
         id, title, content, verification_status, verification_number, credibility_score,
-        ingested_at, published_at,
+        ingested_at, published_at, image_link,
         categories (name, slug)
       `,
         { count: "exact" },
@@ -325,6 +325,7 @@ export async function fetchNewsItemById(id) {
         ingested_at,
         published_at,
         language,
+        image_link,
         categories (name, slug)
       `,
       )
@@ -375,7 +376,7 @@ export async function fetchTrendingNews(limit = 5) {
     .from("news_items")
     .select(
       `
-      id, title, verification_status, verification_number, credibility_score, ingested_at,
+      id, title, verification_status, verification_number, credibility_score, ingested_at, image_link,
       categories (name, slug)
     `,
     )
@@ -399,6 +400,7 @@ export async function fetchCategories() {
     .from("categories")
     .select("*")
     .eq("is_active", true)
+    .neq("slug", "economy")
     .order("display_order", { ascending: true });
 
   if (error) throw error;
@@ -722,13 +724,19 @@ export async function searchNews(
     .select(
       `
       id, title, content, verification_status, verification_number, credibility_score,
-      ingested_at, published_at,
+      ingested_at, published_at, image_link,
       categories!inner (*),
       evidence_items!evidence_items_news_id_fkey (id, url, title, snippet, source_type)
     `,
     )
     .or(`title.ilike.${pattern},content.ilike.${pattern}`)
     .order("ingested_at", { ascending: false });
+
+  // Always exclude economy category posts from search
+  const economyId = await getCategoryIdBySlug("economy");
+  if (economyId) {
+    q = q.neq("category_id", economyId);
+  }
 
   // Category filtering - filter by category_id directly
   if (categorySlug && categorySlug !== "all") {
@@ -739,11 +747,19 @@ export async function searchNews(
       // If category not found, return empty results
       return { data: [], count: 0 };
     }
-  } else if (categorySlugs && categorySlugs.length > 0) {
-    // Fetch all category IDs for multiple filters
-    const categoryIds = await Promise.all(
-      categorySlugs.map((slug) => getCategoryIdBySlug(slug))
-    );
+    } else {
+      // Always exclude economy by default if no specific category is requested
+      const economyId = await getCategoryIdBySlug("economy");
+      if (economyId) {
+        query = query.neq("category_id", economyId);
+      }
+    }
+
+    if (categorySlugs && categorySlugs.length > 0) {
+      // Fetch all category IDs for multiple filters
+      const categoryIds = await Promise.all(
+        categorySlugs.map((slug) => getCategoryIdBySlug(slug))
+      );
     // Filter out null values to avoid breaking the query
     const validIds = categoryIds.filter((id) => id !== null);
     if (validIds.length > 0) {

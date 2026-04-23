@@ -38,6 +38,7 @@ import {
   useEvidenceItems,
 } from "../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../store/authSlice";
+import ReactMarkdown from "react-markdown";
 import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
@@ -93,7 +94,7 @@ function mapNewsItem(item) {
     verificationNumber: item.verification_number ?? 0,
     category,
     categorySlug,
-    imageUrl: item.image_url || null,
+    imageUrl: item.image_link || item.image_url || null,
     evidence: item.evidence_items || [],
     verificationLog: item.verification_log || [],
     source: item.ingestion_sources || null,
@@ -423,9 +424,9 @@ export default function Posts() {
                         تحليل التحقق بالذكاء الاصطناعي
                         <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
                       </h3>
-                      <p className="text-[#172554] leading-relaxed text-xs sm:text-base font-bold text-right drop-shadow-sm">
-                        &ldquo;{post.reasoning}&rdquo;
-                      </p>
+                      <div className="text-[#172554] leading-relaxed text-xs sm:text-base font-bold text-right drop-shadow-sm prose prose-blue max-w-none">
+                        <ReactMarkdown>{`"${post.reasoning}"`}</ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -563,9 +564,9 @@ export default function Posts() {
                           )}
                         </div>
                         {log.llm_reasoning && (
-                          <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">
-                            {log.llm_reasoning}
-                          </p>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-3 prose prose-xs max-w-none">
+                            <ReactMarkdown>{log.llm_reasoning}</ReactMarkdown>
+                          </div>
                         )}
                         {log.completed_at && (
                           <p className="text-[10px] text-gray-300 mt-1">

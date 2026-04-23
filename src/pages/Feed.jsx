@@ -44,7 +44,7 @@ function mapNewsItem(item) {
     timeAgo: formatTimeAgo(item.ingested_at || item.published_at),
     category,
     categorySlug,
-    imageUrl: item.image_url || null,
+    imageUrl: item.image_link || item.image_url || null,
     likes: 0,
     reactions: 0,
   };
@@ -210,12 +210,20 @@ export default function Feed() {
     const verdict = Array.isArray(t.verdicts)
       ? (t.verdicts[0] ?? null)
       : (t.verdicts ?? null);
+    const categoryMeta = Array.isArray(t.categories)
+      ? (t.categories[0] ?? null)
+      : (t.categories ?? null);
+
     return {
       id: t.id,
       title: t.title,
       verification_status:
         verdict?.verdict || t.verification_status || "UNVERIFIED",
       credibility_score: verdict?.confidence ?? t.credibility_score ?? 0,
+      image_link: t.image_link,
+      image_url: t.image_url,
+      category: categoryMeta?.name || "عام",
+      categorySlug: categoryMeta?.slug || null,
     };
   });
 

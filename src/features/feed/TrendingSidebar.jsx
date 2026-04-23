@@ -5,6 +5,7 @@ import { selectIsPremium } from "../../store/authSlice";
 import { STATUS_CONFIG } from "./StatusBadge";
 import { AdCard } from "../../UI/Ads";
 import { MOCK_ADS } from "../../utils/adsData";
+import { resolvePostImageView, POST_MEDIA_IMAGE_CLASS } from "../../postMedia";
 
 export default function TrendingSidebar({ trendingItems = [] }) {
   const isPremium = useSelector(selectIsPremium);
@@ -23,13 +24,28 @@ export default function TrendingSidebar({ trendingItems = [] }) {
             const key =
               item.verification_status?.toUpperCase?.() || "UNVERIFIED";
             const cfg = STATUS_CONFIG[key] || STATUS_CONFIG.UNVERIFIED;
+            const postImage = resolvePostImageView({
+              category: item.category,
+              categorySlug: item.categorySlug,
+              imageUrl: item.image_link || item.image_url,
+            });
+
             return (
               <Link
                 to={`/posts/${item.id}`}
                 key={item.id}
-                className="block py-3.5 first:pt-0 last:pb-0 space-y-1.5 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition"
+                className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0 hover:bg-gray-50 -mx-2 px-2 rounded-lg transition group"
               >
-                <p className="text-sm duration-200 hover:text-accent-emerald font-semibold text-gray-800 leading-snug line-clamp-2">
+                <div className="w-12 h-12 shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                  <img
+                    src={postImage.src}
+                    alt=""
+                    className={`${POST_MEDIA_IMAGE_CLASS} transition-transform duration-500 group-hover:scale-110`}
+                    loading="lazy"
+                  />
+                </div>
+                <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-[13px] duration-200 group-hover:text-teal-600 font-bold text-gray-800 leading-snug line-clamp-2">
                   {item.title}
                 </p>
                 <div className="flex items-center gap-2">
@@ -41,6 +57,7 @@ export default function TrendingSidebar({ trendingItems = [] }) {
                   <span className="text-xs text-gray-400">
                     {item.credibility_score}% ثقة
                   </span>
+                </div>
                 </div>
               </Link>
             );

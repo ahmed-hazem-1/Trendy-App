@@ -119,7 +119,7 @@ export default function Saved() {
                   const postImage = resolvePostImageView({
                     category,
                     categorySlug,
-                    imageUrl: newsItem.image_url,
+                    imageUrl: newsItem.image_link || newsItem.image_url,
                   });
                   const savedDate = new Date(bookmark.saved_at).toLocaleDateString(
                     "ar-EG",

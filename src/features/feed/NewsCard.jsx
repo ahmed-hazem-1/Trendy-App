@@ -28,6 +28,7 @@ import {
   useToggleBookmark,
 } from "../../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/authSlice";
+import ReactMarkdown from "react-markdown";
 import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
@@ -157,7 +158,7 @@ function NewsCard({ item }) {
   const postImage = resolvePostImageView({
     category: item.category,
     categorySlug: item.categorySlug,
-    imageUrl: item.imageUrl,
+    imageUrl: item.image_link || item.imageUrl,
   });
   return (
     <>
@@ -268,9 +269,9 @@ function NewsCard({ item }) {
                     <div className="bg-white/60 p-2 sm:p-2.5 rounded-2xl border border-white/40 shrink-0 mt-0.5 rotation-slow">
                       <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 fill-blue-100/50" />
                     </div>
-                    <p className="text-xs sm:text-sm text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm">
-                      &ldquo;{item.reasoning}&rdquo;
-                    </p>
+                    <div className="text-xs sm:text-sm text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm prose prose-sm prose-blue max-w-none">
+                      <ReactMarkdown>{`"${item.reasoning}"`}</ReactMarkdown>
+                    </div>
                   </div>
                 </div>
                 <button

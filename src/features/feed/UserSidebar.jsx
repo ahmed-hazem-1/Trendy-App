@@ -27,7 +27,6 @@ const CATEGORY_ICONS = {
   politics: Scale,
   sports: Trophy,
   social: Users,
-  economy: LineChart,
   health: Stethoscope,
   science: Microscope,
   entertainment: Clapperboard,
@@ -41,7 +40,6 @@ const CATEGORY_ICONS = {
   "سياسة": Scale,
   "رياضة": Trophy,
   "مجتمع": Users,
-  "اقتصاد": LineChart,
   "صحة": Stethoscope,
   "علوم": Microscope,
   "ترفيه": Clapperboard,
@@ -107,7 +105,7 @@ export default function UserSidebar({
             كل المواضيع
           </button>
           {/* Dynamic categories from DB */}
-          {categories.map((cat) => (
+          {categories.filter(cat => cat.slug !== 'economy' && cat.name !== 'اقتصاد').map((cat) => (
             <button
               key={cat.slug}
               onClick={() => handleCategorySelect(cat.slug)}

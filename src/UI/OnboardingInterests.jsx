@@ -27,7 +27,6 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
       case "sports": return Trophy;
       case "politics": return Scale;
       case "health": return Stethoscope;
-      case "economy": return LineChart;
       case "entertainment": return Clapperboard;
       case "science": return Microscope;
       case "education": return GraduationCap;
@@ -61,7 +60,7 @@ export default function OnboardingInterests({ onComplete, isLoading }) {
         {/* content */}
         <div className="p-6 sm:p-8">
           <div className="grid grid-cols-2 gap-3 mb-8">
-            {categories.map((category) => {
+            {categories.filter(cat => cat.slug !== 'economy' && cat.name !== 'اقتصاد').map((category) => {
               const key = category.slug;
               const label = category.name;
               const Icon = renderCategoryIcon(key);

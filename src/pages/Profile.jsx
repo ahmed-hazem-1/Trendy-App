@@ -55,7 +55,6 @@ const CATEGORY_ICONS = {
   politics: Scale,
   sports: Trophy,
   social: Users,
-  economy: LineChart,
   health: Stethoscope,
   science: Microscope,
   entertainment: Clapperboard,
@@ -69,7 +68,6 @@ const CATEGORY_ICONS = {
   "سياسة": Scale,
   "رياضة": Trophy,
   "مجتمع": Users,
-  "اقتصاد": LineChart,
   "صحة": Stethoscope,
   "علوم": Microscope,
   "ترفيه": Clapperboard,
@@ -475,7 +473,7 @@ export default function Profile() {
               اختر المواضيع التي تهمك لتخصيص تجربتك في Trendy
             </p>
             <div className="flex flex-wrap gap-2.5 sm:gap-3">
-              {categories.map((category) => {
+              {categories.filter(cat => cat.slug !== 'economy' && cat.name !== 'اقتصاد').map((category) => {
                 const key = category.slug;
                 const label = category.name;
                 const Icon = renderCategoryIcon(key);
