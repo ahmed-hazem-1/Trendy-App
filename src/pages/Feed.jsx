@@ -120,15 +120,26 @@ export default function Feed() {
 
   const { data: trendingItems = [] } = useTrendingNews(5);
 
-  // Flatten all pages into a single list
-  const newsItems = useMemo(
-    () =>
-      (newsData?.pages || [])
-        .flatMap((page) => page.data || [])
-        .map(mapNewsItem),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [newsData], // newsData reference is replaced by React Query whenever pages change
-  );
+  // Flatten all pages into a single list and merge with trending items
+  const newsItems = useMemo(() => {
+    const regularItems = (newsData?.pages || [])
+      .flatMap((page) => page.data || [])
+      .map(mapNewsItem);
+
+    // If we're searching, don't inject trending items as it might break relevance
+    if (searchTerm.trim().length >= 2) return regularItems;
+
+    const trendingMappedForFeed = trendingItems.map(mapNewsItem);
+
+    // Merge and deduplicate
+    const combined = [...trendingMappedForFeed, ...regularItems];
+    const seenIds = new Set();
+    return combined.filter((item) => {
+      if (seenIds.has(item.id)) return false;
+      seenIds.add(item.id);
+      return true;
+    });
+  }, [newsData, trendingItems, searchTerm]);
 
   // IDs of all visible items — kept for the sentinel re-check useEffect dep
   const newsItemCount = newsItems.length;
