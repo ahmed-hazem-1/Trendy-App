@@ -58,30 +58,30 @@ export default function PremiumModal({ isOpen, onClose }) {
 
       <div
         ref={modalRef}
-        className="relative w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl overflow-hidden premium-modal-enter"
+        className="relative w-full max-w-full sm:max-w-lg bg-gray-900 rounded-t-[2rem] sm:rounded-[2rem] border border-gray-800 overflow-hidden premium-modal-enter shadow-2xl"
       >
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-gray-700 rounded-full" />
         </div>
 
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-800">
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition cursor-pointer"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" />
           </button>
-          <h3 className="text-base sm:text-lg font-bold text-gray-800">Trendy Premium</h3>
+          <h3 className="text-base sm:text-lg font-bold text-white">Trendy Premium</h3>
           <div className="w-8" />
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 text-white p-4 sm:p-5">
+          <div className="relative overflow-hidden rounded-2xl bg-teal-600 text-white p-4 sm:p-5">
             <div className="absolute -top-10 -left-8 w-32 h-32 rounded-full bg-white/10" />
             <div className="absolute -bottom-16 -right-10 w-40 h-40 rounded-full bg-white/5" />
             <div className="relative flex items-center gap-3 sm:gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                 <Crown className="h-6 w-6" />
               </div>
               <div className="space-y-1">
@@ -95,30 +95,30 @@ export default function PremiumModal({ isOpen, onClose }) {
             {perks.map((perk) => (
               <div
                 key={perk.title}
-                className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 sm:px-5 sm:py-4"
+                className="flex items-start gap-3 rounded-2xl border border-gray-800 bg-gray-800/50 px-4 py-3 sm:px-5 sm:py-4"
               >
-                <div className="mt-0.5 text-teal-600">{perk.icon}</div>
+                <div className="mt-0.5 text-teal-400">{perk.icon}</div>
                 <div className="space-y-1">
-                  <p className="text-sm sm:text-base font-semibold text-gray-800">{perk.title}</p>
-                  <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">{perk.desc}</p>
+                  <p className="text-sm sm:text-base font-semibold text-gray-100">{perk.title}</p>
+                  <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">{perk.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="rounded-2xl border border-dashed border-teal-200 bg-teal-50 text-teal-900 px-4 py-3 sm:px-5 sm:py-4">
-            <p className="text-sm sm:text-base font-semibold">جربها مجاناً</p>
-            <p className="text-xs sm:text-sm text-teal-800/90 mt-1">استكشف المزايا ثم اختر الخطة المناسبة لك</p>
+          <div className="rounded-2xl border border-gray-700 bg-gray-800 text-gray-300 px-4 py-3 sm:px-5 sm:py-4">
+            <p className="text-sm sm:text-base font-semibold text-teal-400">جربها مجاناً</p>
+            <p className="text-xs sm:text-sm mt-1">استكشف المزايا ثم اختر الخطة المناسبة لك</p>
           </div>
 
           {upgradeError && (
-            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+            <div className="rounded-xl bg-red-900/50 border border-red-800 p-3 text-sm text-red-200">
               خطأ: {upgradeError?.message || "فشل تفعيل الاشتراك"}
             </div>
           )}
 
           {successMsg && (
-            <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-sm text-green-700 text-center">
+            <div className="rounded-xl bg-green-900/50 border border-green-800 p-3 text-sm text-green-200 text-center">
               ✓ {successMsg}
             </div>
           )}
@@ -127,7 +127,7 @@ export default function PremiumModal({ isOpen, onClose }) {
             <button
               onClick={onClose}
               disabled={upgradeLoading}
-              className="flex-1 h-11 sm:h-12 rounded-full border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition cursor-pointer disabled:opacity-50"
+              className="flex-1 h-11 sm:h-12 rounded-full border border-gray-700 bg-gray-800 text-gray-300 font-semibold hover:bg-gray-700 transition cursor-pointer disabled:opacity-50"
             >
               {isPremium ? "إغلاق" : "لاحقاً"}
             </button>
@@ -135,7 +135,7 @@ export default function PremiumModal({ isOpen, onClose }) {
               <button
                 onClick={handleSubscribe}
                 disabled={upgradeLoading}
-                className="group relative flex-1 h-11 sm:h-12 rounded-full bg-teal-600 text-white font-semibold transition cursor-pointer hover:brightness-110 active:scale-[0.99] overflow-hidden disabled:opacity-75 disabled:cursor-not-allowed"
+                className="group relative flex-1 h-11 sm:h-12 rounded-full bg-teal-600 text-white font-semibold transition cursor-pointer hover:bg-teal-500 active:scale-[0.99] overflow-hidden disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 <span className="pointer-events-none absolute inset-0 bg-white/15 backdrop-blur-[1px] opacity-0 transition duration-200 group-hover:opacity-100" />
                 <span className="relative">
@@ -145,6 +145,8 @@ export default function PremiumModal({ isOpen, onClose }) {
             )}
           </div>
         </div>
+ 
+
 
         <div className="h-[env(safe-area-inset-bottom,12px)] sm:h-0" />
       </div>

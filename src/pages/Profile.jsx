@@ -363,25 +363,27 @@ export default function Profile() {
           <PremiumBanner onTryPremium={() => setPremiumOpen(true)} />
           
           {/* ── Profile Header Card (Revised: No Banner/Avatar) ── */}
-          <div className="rounded-xl border border-gray-200 bg-linear-to-r from-teal-600 to-emerald-500 p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="rounded-[2rem] border border-gray-800 bg-gray-900 p-6 sm:p-8 text-white relative overflow-hidden shadow-xl">
             {/* Background design elements */}
-            <div className="absolute top-[-20%] right-[-5%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-[-20%] left-[-5%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+            <div className="absolute top-[-20%] right-[-5%] w-48 h-48 bg-teal-500/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-[-20%] left-[-5%] w-32 h-32 bg-teal-500/10 rounded-full blur-2xl" />
             
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2 opacity-90 text-teal-50">
+              <div className="flex items-center gap-3 mb-2 opacity-90 text-teal-400">
                 <span className="text-lg sm:text-xl font-medium">مرحباً بك،</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-3 text-white">
                 {userData.fullName}
                 <span className="text-3xl animate-bounce">👋</span>
               </h1>
-              <div className="flex items-center gap-2 mt-4 text-sm sm:text-base text-teal-50 font-medium">
-                <MapPin className="h-4 w-4" />
+              <div className="flex items-center gap-2 mt-4 text-sm sm:text-base text-gray-300 font-medium">
+                <MapPin className="h-4 w-4 text-teal-500" />
                 <span>{locationLabel}</span>
               </div>
             </div>
           </div>
+ 
+
 
           <div className="grid grid-cols-1 lg:grid-cols-[240px_minmax(0,1fr)] gap-5">
             <aside className="hidden lg:block sticky top-24 self-start">

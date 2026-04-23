@@ -183,7 +183,7 @@ function NewsCard({ item }) {
                     : "text-gray-400 bg-gray-50 hover:bg-gray-100"
                 }`}
               >
->>>>+++ REPLACE
+ 
 
                 {isBookmarked ? (
                   <BookmarkCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

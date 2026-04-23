@@ -62,19 +62,21 @@ export default function Saved() {
         {/* Main Content */}
         <section className="space-y-4 lg:space-y-5">
           {/* Page Header */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+          <div className="rounded-[2rem] border border-gray-800 bg-gray-900 p-4 sm:p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-2">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-teal-600 flex items-center justify-center shadow-inner">
                 <Bookmark className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">الأخبار المحفوظة</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-xl font-bold text-white">الأخبار المحفوظة</h1>
+                <p className="text-sm text-gray-400">
                   {bookmarks.length > 0 ? `${bookmarks.length} خبر محفوظ` : "لا توجد أخبار محفوظة"}
                 </p>
               </div>
             </div>
           </div>
+ 
+
 
           {/* Saved Posts List */}
           <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
