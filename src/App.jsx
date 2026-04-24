@@ -14,6 +14,7 @@ const Saved = lazy(() => import("./pages/Saved"));
 const Posts = lazy(() => import("./pages/Posts"));
 const AppLayout = lazy(() => import("./UI/AppLayout"));
 const AdminLayout = lazy(() => import("./UI/AdminLayout"));
+const About = lazy(() => import("./pages/About"));
 
 // Admin Pages
 const CategorySourceManager = lazy(() => import("./pages/CategorySourceManager"));
@@ -72,6 +73,7 @@ export default function App() {
               }
             />
             <Route path="/posts/:id" element={<Posts />} />
+            <Route path="/about" element={<About />} />
           </Route>
         </Routes>
       </Suspense>

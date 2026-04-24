@@ -1,5 +1,6 @@
-import { X, LayoutGrid } from "lucide-react";
+import { X, LayoutGrid, Info } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import ProfileCard from "./ProfileCard";
 import { useCategories } from "../hooks/useNews";
 import { getCategoryIcon } from "../utils/categoryIcons";
@@ -71,7 +72,7 @@ export default function MobileSidebar({
         </div>
 
         {/* Categories */}
-        <div className="px-4 pb-8">
+        <div className="px-4 pb-4">
           <div className="rounded-2xl border border-gray-800 bg-gray-800/30 p-4">
             <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 px-2">
               التصنيفات
@@ -110,6 +111,20 @@ export default function MobileSidebar({
               ))}
             </nav>
           </div>
+        </div>
+
+        {/* About App */}
+        <div className="px-4 pb-12">
+          <Link
+            to="/about"
+            onClick={onClose}
+            className="w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-gray-400 hover:bg-gray-800 hover:text-white transition cursor-pointer bg-gray-800/20 border border-gray-800/50"
+          >
+            <div className="p-1.5 rounded-lg bg-gray-700/30">
+              <Info className="h-4 w-4" />
+            </div>
+            عن التطبيق
+          </Link>
         </div>
       </div>
     </div>

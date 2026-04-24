@@ -1,6 +1,7 @@
 import SearchBar from "./SearchBar";
 import UserMenu from "./UserMenu";
 import { Link } from "react-router-dom";
+import benhaLogo from "../images/benha_university_logo.png";
 import { Search, X, Menu } from "lucide-react";
 import { useState } from "react";
 
@@ -20,13 +21,20 @@ export default function NavBar({ onMenuClick }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link to="/feed" className="shrink-0 flex items-center h-full ml-2">
+          <Link to="/feed" className="shrink-0 flex items-center h-full gap-4 sm:gap-6">
             <img
               src="/logo/Trendy - logo - with text.png"
               alt="Trendy"
               className="h-8 sm:h-10 w-auto object-contain scale-[2] sm:scale-150 origin-right"
             />
+            <div className="h-6 w-px bg-gray-200 mx-2" />
+            <img
+              src={benhaLogo}
+              alt="جامعة بنها"
+              className="h-8 sm:h-10 w-auto object-contain scale-[1.2] sm:scale-110"
+            />
           </Link>
+
           {/* Desktop search */}
           <div className="hidden md:flex items-center h-full">
             <SearchBar className="h-9" />
@@ -35,6 +43,13 @@ export default function NavBar({ onMenuClick }) {
 
         {/* يسار: الإشعارات + المستخدم */}
         <div className="flex items-center gap-2 sm:gap-5 h-full">
+          <Link
+            to="/about"
+            className="text-[11px] sm:text-sm font-bold text-gray-500 hover:text-teal-600 transition-colors"
+          >
+            عن التطبيق
+          </Link>
+
           {/* Mobile search toggle */}
           <button
             onClick={() => setSearchOpen(!searchOpen)}
