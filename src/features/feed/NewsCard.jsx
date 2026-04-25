@@ -28,7 +28,7 @@ import {
   useToggleBookmark,
 } from "../../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../../store/authSlice";
-import ReactMarkdown from "react-markdown";
+import { MarkdownRenderer } from "../../UI/MarkdownRenderer";
 import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
@@ -259,23 +259,22 @@ function NewsCard({ item }) {
 
             {insightOpen && (
               <div className="animate-fade-in-down origin-top">
-                <div className="relative rounded-2xl p-4 sm:p-5 mb-4 border border-[#a3cfff]/80 shadow-[0_8px_30px_rgb(163,207,255,0.2)] overflow-hidden group/insight animate-neon-glow">
-                  {/* Deep Vibrant Gradient Base (Reduced transparency to prevent "wash out") */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/40 via-[#e0f7ff]/40 to-[#99d7ff]/40 backdrop-blur-md -z-10 transition-transform duration-500 group-hover/insight:scale-105" />
-                  
-                  {/* Large Inner Glows for the "Cloud" effect from your image */}
-                  <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-[#a3cfff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
-                  <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-[#99d7ff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
-                  
-                  <div className="flex items-start gap-3 sm:gap-4 relative z-10">
-                    <div className="bg-white/60 p-2 sm:p-2.5 rounded-2xl border border-white/40 shrink-0 mt-0.5 rotation-slow">
-                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 fill-blue-100/50" />
-                    </div>
-                    <div className="text-xs sm:text-sm text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm prose prose-sm prose-blue max-w-none">
-                      <ReactMarkdown>{`"${item.reasoning}"`}</ReactMarkdown>
-                    </div>
-                  </div>
-                </div>
+                 <div className="relative rounded-2xl p-3 sm:p-4 mb-4 border border-[#a3cfff]/80 shadow-[0_8px_30px_rgb(163,207,255,0.2)] overflow-hidden group/insight animate-neon-glow">
+                   <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/40 via-[#e0f7ff]/40 to-[#99d7ff]/40 backdrop-blur-md -z-10 transition-transform duration-500 group-hover/insight:scale-105" />
+                   <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-[#a3cfff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
+                   <div className="absolute bottom-[-20%] left-[-10%] w-48 h-48 bg-[#99d7ff] opacity-30 rounded-full blur-[60px] -z-10 animate-pulse" />
+                   <div className="relative z-10">
+                     <div className="font-extrabold text-[#1e3a8a] mb-1.5 text-[10px] sm:text-xs tracking-tight flex items-center gap-1.5">
+                       <div className="bg-white/60 p-1 sm:p-1.5 rounded-xl border border-white/40 shrink-0 rotation-slow">
+                         <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600 fill-blue-100/50" />
+                       </div>
+                       تحليل التحقق بالذكاء الاصطناعي
+                     </div>
+                     <div className="text-[10px] sm:text-xs text-[#1e3a8a] leading-relaxed font-bold text-right drop-shadow-sm">
+                       <MarkdownRenderer content={item.reasoning} compact />
+                     </div>
+                   </div>
+                 </div>
                 <button
                   onClick={() => setSourcesOpen(!sourcesOpen)}
                   className="w-full flex items-center justify-center gap-1 text-center text-[10px] sm:text-xs font-semibold text-gray-500 hover:text-gray-700 transition cursor-pointer"

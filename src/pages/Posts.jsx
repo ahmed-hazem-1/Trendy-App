@@ -38,7 +38,7 @@ import {
   useEvidenceItems,
 } from "../hooks/useNews";
 import { selectProfile, selectIsDemoMode, selectIsPremium } from "../store/authSlice";
-import ReactMarkdown from "react-markdown";
+import { MarkdownRenderer } from "../UI/MarkdownRenderer";
 import {
   resolvePostImageView,
   POST_MEDIA_FRAME_PRESETS,
@@ -355,8 +355,8 @@ export default function Posts() {
             {/* ── Article body ── */}
             <div className="px-4 sm:px-8 py-6 sm:py-8">
               {post.content && (
-                <div className="prose prose-gray prose-sm sm:prose-base max-w-none text-right leading-relaxed text-gray-700 whitespace-pre-line mb-8">
-                  {post.content}
+                <div className="text-right leading-loose text-gray-700 mb-8">
+                  <MarkdownRenderer content={post.content} />
                 </div>
               )}
 
@@ -407,29 +407,23 @@ export default function Posts() {
             {/* ── Reasoning (AI Insights) ── */}
             {post.reasoning && (
               <div className="px-4 sm:px-8 pb-6 group/insight">
-                <div className="relative rounded-3xl p-6 sm:p-8 border border-[#a3cfff]/50 shadow-[0_10px_40px_rgba(163,207,255,0.25)] overflow-hidden transition-all duration-500">
-                  {/* Deep Vibrant Gradient Base matching your reference image */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/50 via-[#e0f7ff]/50 to-[#99d7ff]/50 backdrop-blur-2xl -z-10 transition-transform duration-700 group-hover/insight:scale-105" />
-                  
-                  {/* Large Inner Glows for the soft cloud-like background bubbles */}
-                  <div className="absolute top-[-25%] right-[-15%] w-64 h-64 bg-[#a3cfff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
-                  <div className="absolute bottom-[-25%] left-[-15%] w-64 h-64 bg-[#99d7ff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
-                  
-                  <div className="flex items-start gap-4 sm:gap-6 relative z-10">
-                    <div className="bg-white/70 p-3 sm:p-4 rounded-2xl border border-white/50 shrink-0 rotation-slow">
-                      <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 fill-blue-100/50" />
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-[#1e3a8a] mb-2 sm:mb-3 text-sm sm:text-lg tracking-tight flex items-center gap-2">
-                        تحليل التحقق بالذكاء الاصطناعي
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
-                      </h3>
-                      <div className="text-[#172554] leading-relaxed text-xs sm:text-base font-bold text-right drop-shadow-sm prose prose-blue max-w-none">
-                        <ReactMarkdown>{`"${post.reasoning}"`}</ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                 <div className="relative rounded-3xl p-4 sm:p-6 border border-[#a3cfff]/50 shadow-[0_10px_40px_rgba(163,207,255,0.25)] overflow-hidden transition-all duration-500">
+                   <div className="absolute inset-0 bg-gradient-to-br from-[#a3cfff]/50 via-[#e0f7ff]/50 to-[#99d7ff]/50 backdrop-blur-2xl -z-10 transition-transform duration-700 group-hover/insight:scale-105" />
+                   <div className="absolute top-[-25%] right-[-15%] w-64 h-64 bg-[#a3cfff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
+                   <div className="absolute bottom-[-25%] left-[-15%] w-64 h-64 bg-[#99d7ff] opacity-40 rounded-full blur-[80px] -z-10 animate-pulse" />
+                   <div className="relative z-10">
+                     <h3 className="font-extrabold text-[#1e3a8a] mb-1.5 sm:mb-2 text-xs sm:text-sm tracking-tight flex items-center gap-2">
+                       <div className="bg-white/70 p-1.5 sm:p-2 rounded-xl border border-white/50 shrink-0 rotation-slow">
+                         <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 fill-blue-100/50" />
+                       </div>
+                       تحليل التحقق بالذكاء الاصطناعي
+                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
+                     </h3>
+                     <div className="text-[#172554] leading-relaxed text-[11px] sm:text-sm font-bold text-right drop-shadow-sm">
+                       <MarkdownRenderer content={post.reasoning} compact />
+                     </div>
+                   </div>
+                 </div>
               </div>
             )}
 
@@ -564,8 +558,8 @@ export default function Posts() {
                           )}
                         </div>
                         {log.llm_reasoning && (
-                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-3 prose prose-xs max-w-none">
-                            <ReactMarkdown>{log.llm_reasoning}</ReactMarkdown>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-3">
+                            <MarkdownRenderer content={log.llm_reasoning} compact />
                           </div>
                         )}
                         {log.completed_at && (
