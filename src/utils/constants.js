@@ -116,7 +116,6 @@ const MOCK_STATS = {
   total: 284,
   verified: 147,
   fake: 20,
-  misleading: 53,
   unverified: 64,
   avgConfidence: 91,
 };

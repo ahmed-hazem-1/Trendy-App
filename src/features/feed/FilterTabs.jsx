@@ -1,4 +1,4 @@
-import { AlertTriangle, XCircle, CheckCircle, ShieldAlert } from "lucide-react";
+import { AlertTriangle, XCircle, CheckCircle } from "lucide-react";
 
 const FILTERS = [
   { key: "ALL", label: "الكل", icon: null },
