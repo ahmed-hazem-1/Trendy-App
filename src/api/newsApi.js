@@ -276,10 +276,8 @@ export async function fetchNewsItems({
       }
     }
 
-    let overfetchPageSize = pageSize;
     if (unverifiedClientFilter) {
-      overfetchPageSize = pageSize * 3;
-      query = query.range((page - 1) * overfetchPageSize, page * overfetchPageSize - 1);
+      query = query.limit(1000);
     } else {
       query = query.range((page - 1) * pageSize, page * pageSize - 1);
     }
@@ -293,8 +291,21 @@ export async function fetchNewsItems({
     const merged = await attachVerdicts(data, verdictMap);
 
     if (unverifiedClientFilter) {
-      const filtered = merged.filter((item) => !item.verdicts);
-      return { data: filtered, count: count ?? filtered.length, page, pageSize };
+      const filtered = merged.filter(
+        (item) =>
+          !item.verdicts ||
+          ["UNVERIFIED", "INCONCLUSIVE"].includes(
+            item.verdicts.verdict?.toUpperCase()
+          )
+      );
+      const start = (page - 1) * pageSize;
+      const paged = filtered.slice(start, start + pageSize);
+      return {
+        data: paged,
+        count: filtered.length,
+        page,
+        pageSize,
+      };
     }
 
     return { data: merged, count, page, pageSize };
@@ -807,12 +818,13 @@ export async function searchNews(
         }
       } else if (filter.mode === "unverified_client") {
         unverifiedClientFilter = true;
-        q = q.limit(limit * 3);
       }
     }
   }
 
-  if (!unverifiedClientFilter) {
+  if (unverifiedClientFilter) {
+    q = q.limit(1000);
+  } else {
     q = q.limit(limit);
   }
 
@@ -822,7 +834,13 @@ export async function searchNews(
   const merged = await attachVerdicts(data, verdictMap);
 
   if (unverifiedClientFilter) {
-    const filtered = merged.filter((item) => !item.verdicts);
+    const filtered = merged.filter(
+      (item) =>
+        !item.verdicts ||
+        ["UNVERIFIED", "INCONCLUSIVE"].includes(
+          item.verdicts.verdict?.toUpperCase()
+        )
+    );
     return { data: filtered.slice(0, limit), count: filtered.length };
   }
 
