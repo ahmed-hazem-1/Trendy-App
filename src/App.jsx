@@ -27,7 +27,7 @@ export default function App() {
   useAuthListener();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Suspense fallback={<SplashScreen />}>
         <Routes>
           <Route index element={<Navigate to="/login" replace />} />
