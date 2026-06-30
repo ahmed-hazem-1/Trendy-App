@@ -1,12 +1,13 @@
 import React from 'react';
 import benhaLogo from '../images/benha_university_logo.png';
+import { LOGO } from '../utils/asset';
 
 export default function About() {
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-sm p-8 sm:p-12 text-center my-4">
       <div className="flex items-center justify-center mb-10 gap-8 sm:gap-12">
         <img
-          src="/logo/Trendy - logo - with text.png"
+          src={LOGO.withText}
           alt="Trendy Logo"
           className="h-12 sm:h-20 w-auto object-contain"
         />

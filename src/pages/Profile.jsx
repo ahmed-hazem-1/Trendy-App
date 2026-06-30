@@ -34,6 +34,7 @@ import FormSelect from "../UI/FormSelect";
 import Button from "../UI/Button";
 import MobileSidebar from "../UI/MobileSidebar";
 import { EGYPT_GOVERNORATES } from "../utils/constants";
+import { LOGO } from "../utils/asset";
 import { AdCard, PremiumBanner, FeedAdStrip } from "../UI/Ads";
 import PremiumModal from "../UI/PremiumModal";
 import { MOCK_ADS } from "../utils/adsData";
@@ -98,7 +99,7 @@ const FALLBACK_USER = {
   location: "",
   bio: "",
   interests: [],
-  avatar: "/logo/Trendy-logo-no-text.png",
+  avatar: LOGO.noText,
 };
 
 const PROFILE_TABS = [
@@ -172,7 +173,7 @@ export default function Profile() {
         location: profile.location || "",
         bio: profile.bio || "",
         interests: profile.interests || [],
-        avatar: profile.avatar_url || "/logo/Trendy-logo-no-text.png",
+        avatar: profile.avatar_url || LOGO.noText,
       }
     : FALLBACK_USER;
 

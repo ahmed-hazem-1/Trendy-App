@@ -1,3 +1,5 @@
+import { LOGO } from "../utils/asset";
+
 export default function AuthLayout({ title, subtitle, children }) {
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-50 px-3 sm:px-4 relative overflow-hidden">
@@ -17,7 +19,7 @@ export default function AuthLayout({ title, subtitle, children }) {
         {/* Logo */}
         <div className="flex justify-center mb-5">
           <img
-            src="/logo/Trendy - logo - with text.png"
+            src={LOGO.withText}
             alt="Trendy"
             className="w-24 h-24 object-contain"
           />

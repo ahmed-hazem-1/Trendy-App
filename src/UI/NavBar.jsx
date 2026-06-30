@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import benhaLogo from "../images/benha_university_logo.png";
 import { Search, X, Menu } from "lucide-react";
 import { useState } from "react";
+import { LOGO } from "../utils/asset";
 
 export default function NavBar({ onMenuClick }) {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -23,7 +24,7 @@ export default function NavBar({ onMenuClick }) {
           </button>
           <Link to="/feed" className="shrink-0 flex items-center h-full gap-4 sm:gap-6">
             <img
-              src="/logo/Trendy - logo - with text.png"
+              src={LOGO.withText}
               alt="Trendy"
               className="h-8 sm:h-10 w-auto object-contain scale-[2] sm:scale-150 origin-right"
             />

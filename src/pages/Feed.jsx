@@ -19,6 +19,7 @@ import {
 import { Loader } from "lucide-react";
 import { selectProfile } from "../store/authSlice";
 import { FeedAdStrip, PremiumBanner } from "../UI/Ads";
+import { LOGO } from "../utils/asset";
 
 function mapNewsItem(item) {
   const categoryMeta = Array.isArray(item.categories)
@@ -270,13 +271,13 @@ export default function Feed() {
           {/* Loading indicator for refetches / filter changes (keeps content visible) */}
           {newsFetching && !newsLoading && !isFetchingNextPage && (
             <div className="flex justify-center mb-4 mt-2">
-              <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-12 h-12 object-contain" />
+              <img src={LOGO.gif} alt="Loading..." className="w-12 h-12 object-contain" />
             </div>
           )}
 
           {newsLoading ? (
             <div className="flex items-center justify-center py-20">
-              <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-16 h-16 object-contain" />
+              <img src={LOGO.gif} alt="Loading..." className="w-16 h-16 object-contain" />
             </div>
           ) : newsError ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -314,7 +315,7 @@ export default function Feed() {
               {/* Sentinel + Load-more */}
               <div ref={loadMoreRef} className="py-4 flex justify-center">
                 {isFetchingNextPage ? (
-                  <img src="/logo/Trendy - GIF.gif" alt="Loading..." className="w-10 h-10 object-contain" />
+                  <img src={LOGO.gif} alt="Loading..." className="w-10 h-10 object-contain" />
                 ) : hasNextPage ? (
                   <button
                     onClick={() => fetchNextPage()}

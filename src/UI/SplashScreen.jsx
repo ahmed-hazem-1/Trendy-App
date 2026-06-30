@@ -1,4 +1,5 @@
 import benhaLogo from "../images/benha_university_logo.png";
+import { LOGO } from "../utils/asset";
 
 export default function SplashScreen() {
   return (
@@ -7,7 +8,7 @@ export default function SplashScreen() {
     >
       <div className="flex items-center gap-8 animate-in fade-in zoom-in duration-500">
         <img
-          src="/logo/Trendy - GIF.gif"
+          src={LOGO.gif}
           alt="Trendy"
           className="w-24 h-24 sm:w-32 sm:h-32 object-contain"
         />
